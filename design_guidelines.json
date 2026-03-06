@@ -1,0 +1,165 @@
+{
+  "project_name": "WBUK Whistleblower Triage Platform",
+  "design_philosophy": {
+    "identity": "The Safe Harbor",
+    "core_values": ["Anonymity", "Security", "Clarity", "Empathy"],
+    "visual_tone": "Institutional yet Humane. Dark, muted tones for security; clean, warm paper tones for readability. No gradients.",
+    "emotional_archetype": "The Guardian (Protective, Authoritative, Calm)"
+  },
+  "typography": {
+    "font_family_primary": "Manrope, sans-serif",
+    "font_family_secondary": "Merriweather, serif",
+    "scale": {
+      "h1": "text-4xl md:text-5xl font-serif font-bold tracking-tight",
+      "h2": "text-3xl md:text-4xl font-serif font-bold tracking-tight",
+      "h3": "text-2xl md:text-3xl font-serif font-semibold",
+      "body": "text-base md:text-lg font-sans leading-relaxed",
+      "small": "text-sm font-sans text-muted-foreground",
+      "tiny": "text-xs font-sans uppercase tracking-widest"
+    },
+    "imports": [
+      "@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300&display=swap');"
+    ]
+  },
+  "colors": {
+    "theme": "light",
+    "palette": {
+      "primary": {
+        "DEFAULT": "#0f172a",
+        "foreground": "#f8fafc",
+        "hover": "#1e293b",
+        "description": "Deep Slate - Represents authority and night-time security."
+      },
+      "secondary": {
+        "DEFAULT": "#0f766e",
+        "foreground": "#ffffff",
+        "hover": "#115e59",
+        "description": "Muted Teal - Represents safety and calm."
+      },
+      "accent": {
+        "DEFAULT": "#d97706",
+        "foreground": "#ffffff",
+        "description": "Amber Gold - Used sparingly for 'Call to Action' or critical alerts."
+      },
+      "background": {
+        "DEFAULT": "#f8fafc",
+        "paper": "#ffffff",
+        "muted": "#f1f5f9"
+      },
+      "text": {
+        "primary": "#0f172a",
+        "secondary": "#475569",
+        "muted": "#94a3b8"
+      },
+      "border": {
+        "DEFAULT": "#e2e8f0",
+        "focus": "#0f766e"
+      },
+      "status": {
+        "success": "#059669",
+        "warning": "#d97706",
+        "error": "#b91c1c",
+        "info": "#0369a1"
+      }
+    }
+  },
+  "layout_system": {
+    "container": {
+      "max_width": "max-w-7xl",
+      "padding": "px-4 md:px-8 lg:px-12",
+      "center": "mx-auto"
+    },
+    "spacing": {
+      "section_gap": "py-24 md:py-32",
+      "component_gap": "gap-8 md:gap-12",
+      "internal_padding": "p-6 md:p-8"
+    },
+    "grids": {
+      "dashboard": "grid grid-cols-1 md:grid-cols-12 gap-6",
+      "features": "grid grid-cols-1 md:grid-cols-3 gap-8",
+      "bento_spans": {
+        "hero": "col-span-1 md:col-span-8 lg:col-span-8",
+        "sidebar": "col-span-1 md:col-span-4 lg:col-span-4",
+        "full": "col-span-full"
+      }
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-6 py-3 font-medium transition-all duration-200 shadow-sm hover:shadow-md",
+      "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/90 rounded-md px-6 py-3 font-medium transition-all duration-200",
+      "outline": "border-2 border-primary text-primary hover:bg-primary/5 rounded-md px-6 py-3 font-medium transition-all duration-200",
+      "ghost": "text-primary hover:bg-primary/5 rounded-md px-4 py-2 font-medium transition-all duration-200"
+    },
+    "cards": {
+      "base": "bg-white rounded-lg border border-border shadow-sm p-6 md:p-8",
+      "hover": "hover:shadow-md hover:border-primary/20 transition-all duration-200",
+      "glass": "bg-white/80 backdrop-blur-md border border-white/20 shadow-lg"
+    },
+    "inputs": {
+      "base": "flex h-12 w-full rounded-md border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+      "search": "pl-10" 
+    },
+    "navigation": {
+      "header": "sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
+      "link": "text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+    }
+  },
+  "visual_enhancers": {
+    "shadows": {
+      "subtle": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+      "card": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+      "float": "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)"
+    },
+    "borders": {
+      "subtle": "border border-slate-200",
+      "active": "border-l-4 border-l-secondary" 
+    },
+    "icons": {
+      "library": "lucide-react",
+      "style": "stroke-width: 1.5px; size: 20px;"
+    }
+  },
+  "assets": {
+    "images": {
+      "hero_background": {
+        "url": "https://images.unsplash.com/photo-1710198332438-245579acbb1f?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Modern London Architecture Glass Facade",
+        "usage": "Use as a darkened background overlay for the Landing Page Hero section to imply 'Corporate/Legal' context."
+      },
+      "security_context": {
+        "url": "https://images.unsplash.com/photo-1732635456274-ea67cdde1e0c?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Black and White Tall Building Abstract",
+        "usage": "Use for 'About WBUK' or 'Security Features' section background."
+      },
+      "legal_context": {
+        "url": "https://images.unsplash.com/photo-1765375411306-9b19cb5797a3?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Modern Skyscrapers with Union Jack",
+        "usage": "Use for 'Legal Protection' section."
+      }
+    },
+    "icons_usage": {
+      "security": "ShieldCheck",
+      "anonymity": "Ghost",
+      "chat": "MessageSquareLock",
+      "admin": "LayoutDashboard",
+      "upload": "UploadCloud",
+      "alert": "AlertTriangle",
+      "success": "CheckCircle2"
+    }
+  },
+  "accessibility": {
+    "contrast_check": "Ensure all text on colored backgrounds meets WCAG AA standards (4.5:1).",
+    "focus_states": "All interactive elements MUST have a visible focus ring (ring-2 ring-secondary).",
+    "aria_labels": "All icon-only buttons must have aria-label."
+  },
+  "universal_guidelines": [
+    "Do not use gradients for backgrounds. Use solid, muted colors or subtle textures.",
+    "Do not center-align long text blocks. Left-align for readability.",
+    "Use 'sonner' for all toast notifications.",
+    "Components must use named exports.",
+    "Pages must use default exports.",
+    "Add 'data-testid' to all interactive elements."
+  ],
+  "instructions_to_main_agent": "Focus on building a 'Safe Harbor'. The UI should feel like a quiet, secure room. Avoid flashy animations. Use the provided image URLs for the landing page to set the tone, but rely on Lucide icons for the app interface to maintain clarity and performance."
+}
