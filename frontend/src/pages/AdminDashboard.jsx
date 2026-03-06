@@ -30,7 +30,8 @@ import {
   AlertTriangle,
   Clock,
   CheckCircle2,
-  Loader2
+  Loader2,
+  Users
 } from "lucide-react";
 import { getCases, getAdminStats, adminLogout, getCurrentAdmin } from "@/lib/api";
 import { toast } from "sonner";
@@ -160,6 +161,17 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-4">
+            {adminInfo?.role === "super_admin" && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigate("/admin/users")}
+                data-testid="manage-users-button"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Users
+              </Button>
+            )}
             <span className="text-sm text-slate-600 hidden sm:inline">
               {adminInfo?.name || "Admin"}
             </span>

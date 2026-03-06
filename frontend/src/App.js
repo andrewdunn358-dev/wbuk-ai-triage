@@ -7,6 +7,7 @@ import SummaryPage from "@/pages/SummaryPage";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminCaseDetail from "@/pages/AdminCaseDetail";
+import AdminUsers from "@/pages/AdminUsers";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Route path="/admin" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/cases/:caseReference" element={<AdminCaseDetail />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
         </Routes>
       </BrowserRouter>
     </div>

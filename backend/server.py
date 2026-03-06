@@ -826,6 +826,192 @@ async def get_current_admin_info(admin: dict = Depends(get_current_admin)):
     }
 
 # =============================================================================
+# ADMIN USER MANAGEMENT ENDPOINTS
+# =============================================================================
+
+class AdminUserCreate(BaseModel):
+    email: str
+    name: str
+    password: str
+    role: str = "advisor"  # advisor, super_admin, viewer
+
+class AdminUserUpdate(BaseModel):
+    name: Optional[str] = None
+    role: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class AdminPasswordChange(BaseModel):
+    current_password: Optional[str] = None  # Required for self-change
+    new_password: str
+
+@api_router.post("/admin/users")
+async def create_admin_user(data: AdminUserCreate, admin: dict = Depends(get_current_admin)):
+    """Create a new admin/advisor user (super_admin only)"""
+    if admin["role"] != "super_admin":
+        raise HTTPException(status_code=403, detail="Only super admins can create users")
+    
+    # Check if email already exists
+    email_hash = hashlib.sha256(data.email.lower().encode()).hexdigest()
+    existing = await db.admin_users.find_one({"email_hash": email_hash})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Validate role
+    if data.role not in ["super_admin", "advisor", "viewer"]:
+        raise HTTPException(status_code=400, detail="Invalid role. Must be: super_admin, advisor, or viewer")
+    
+    # Validate password strength
+    if len(data.password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    
+    new_user = {
+        "user_id": str(uuid.uuid4()),
+        "email_hash": email_hash,
+        "password_hash": hash_password(data.password),
+        "name": data.name,
+        "role": data.role,
+        "is_active": True,
+        "mfa_enabled": False,
+        "failed_login_attempts": 0,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": admin["user_id"],
+        "must_change_password": True
+    }
+    
+    await db.admin_users.insert_one(new_user)
+    await log_audit("admin", "user_created", "admin_user", new_user["user_id"], 
+                   {"email_hash": email_hash, "role": data.role}, user_id=admin["user_id"])
+    
+    return {
+        "status": "created",
+        "user_id": new_user["user_id"],
+        "email": data.email,
+        "name": data.name,
+        "role": data.role
+    }
+
+@api_router.get("/admin/users")
+async def list_admin_users(admin: dict = Depends(get_current_admin)):
+    """List all admin users (super_admin only)"""
+    if admin["role"] != "super_admin":
+        raise HTTPException(status_code=403, detail="Only super admins can view users")
+    
+    users = await db.admin_users.find(
+        {},
+        {"_id": 0, "password_hash": 0, "mfa_secret": 0, "mfa_backup_codes": 0}
+    ).to_list(100)
+    
+    return {"users": users}
+
+@api_router.get("/admin/users/{user_id}")
+async def get_admin_user(user_id: str, admin: dict = Depends(get_current_admin)):
+    """Get a specific admin user"""
+    # Users can view themselves, super_admin can view anyone
+    if admin["role"] != "super_admin" and admin["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    user = await db.admin_users.find_one(
+        {"user_id": user_id},
+        {"_id": 0, "password_hash": 0, "mfa_secret": 0, "mfa_backup_codes": 0}
+    )
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return user
+
+@api_router.patch("/admin/users/{user_id}")
+async def update_admin_user(user_id: str, data: AdminUserUpdate, admin: dict = Depends(get_current_admin)):
+    """Update an admin user (super_admin only, or self for name)"""
+    is_self = admin["user_id"] == user_id
+    is_super = admin["role"] == "super_admin"
+    
+    if not is_self and not is_super:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Non-super admins can only update their own name
+    if not is_super and (data.role is not None or data.is_active is not None):
+        raise HTTPException(status_code=403, detail="Only super admins can change role or status")
+    
+    user = await db.admin_users.find_one({"user_id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    update_fields = {}
+    if data.name is not None:
+        update_fields["name"] = data.name
+    if data.role is not None and is_super:
+        if data.role not in ["super_admin", "advisor", "viewer"]:
+            raise HTTPException(status_code=400, detail="Invalid role")
+        update_fields["role"] = data.role
+    if data.is_active is not None and is_super:
+        update_fields["is_active"] = data.is_active
+    
+    if update_fields:
+        update_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await db.admin_users.update_one({"user_id": user_id}, {"$set": update_fields})
+        await log_audit("admin", "user_updated", "admin_user", user_id, update_fields, user_id=admin["user_id"])
+    
+    return {"status": "updated", "user_id": user_id}
+
+@api_router.post("/admin/users/{user_id}/password")
+async def change_user_password(user_id: str, data: AdminPasswordChange, admin: dict = Depends(get_current_admin)):
+    """Change user password (self or super_admin)"""
+    is_self = admin["user_id"] == user_id
+    is_super = admin["role"] == "super_admin"
+    
+    if not is_self and not is_super:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    user = await db.admin_users.find_one({"user_id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # If changing own password, verify current password
+    if is_self and not is_super:
+        if not data.current_password:
+            raise HTTPException(status_code=400, detail="Current password required")
+        if not verify_password(data.current_password, user["password_hash"]):
+            raise HTTPException(status_code=401, detail="Current password incorrect")
+    
+    # Validate new password
+    if len(data.new_password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    
+    await db.admin_users.update_one(
+        {"user_id": user_id},
+        {
+            "$set": {
+                "password_hash": hash_password(data.new_password),
+                "password_changed_at": datetime.now(timezone.utc).isoformat(),
+                "must_change_password": False
+            }
+        }
+    )
+    
+    await log_audit("admin", "password_changed", "admin_user", user_id, user_id=admin["user_id"])
+    
+    return {"status": "password_changed"}
+
+@api_router.delete("/admin/users/{user_id}")
+async def delete_admin_user(user_id: str, admin: dict = Depends(get_current_admin)):
+    """Delete an admin user (super_admin only, cannot delete self)"""
+    if admin["role"] != "super_admin":
+        raise HTTPException(status_code=403, detail="Only super admins can delete users")
+    
+    if admin["user_id"] == user_id:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+    
+    user = await db.admin_users.find_one({"user_id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    await db.admin_users.delete_one({"user_id": user_id})
+    await log_audit("admin", "user_deleted", "admin_user", user_id, user_id=admin["user_id"])
+    
+    return {"status": "deleted", "user_id": user_id}
+
+# =============================================================================
 # ADMIN CASE MANAGEMENT ENDPOINTS
 # =============================================================================
 
