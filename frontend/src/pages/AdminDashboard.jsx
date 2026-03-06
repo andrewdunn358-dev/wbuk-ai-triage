@@ -240,12 +240,12 @@ export default function AdminDashboard() {
                   data-testid="search-cases-input"
                 />
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={statusFilter || "all"} onValueChange={(v) => setStatusFilter(v === "all" ? "" : v)}>
                 <SelectTrigger className="w-full md:w-[180px]" data-testid="status-filter">
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="New">New</SelectItem>
                   <SelectItem value="Under Review">Under Review</SelectItem>
                   <SelectItem value="In Progress">In Progress</SelectItem>
@@ -254,12 +254,12 @@ export default function AdminDashboard() {
                   <SelectItem value="Closed">Closed</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <Select value={priorityFilter || "all"} onValueChange={(v) => setPriorityFilter(v === "all" ? "" : v)}>
                 <SelectTrigger className="w-full md:w-[150px]" data-testid="priority-filter">
                   <SelectValue placeholder="All Priorities" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Priorities</SelectItem>
+                  <SelectItem value="all">All Priorities</SelectItem>
                   <SelectItem value="P1">P1 - Critical</SelectItem>
                   <SelectItem value="P2">P2 - High</SelectItem>
                   <SelectItem value="P3">P3 - Normal</SelectItem>
