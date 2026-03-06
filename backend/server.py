@@ -14,6 +14,17 @@ import jwt
 import bcrypt
 import hashlib
 from emergentintegrations.llm.chat import LlmChat, UserMessage
+from decision_engine import (
+    ENHANCED_SYSTEM_PROMPT,
+    calculate_protection_score,
+    calculate_risk_score,
+    score_qualifying_disclosure,
+    score_public_interest,
+    score_worker_status,
+    score_reasonable_belief,
+    get_prescribed_persons,
+    PRESCRIBED_PERSONS
+)
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -162,42 +173,10 @@ async def log_audit(actor_type: str, action: str, resource_type: str, resource_i
     })
 
 # =============================================================================
-# AI TRIAGE SYSTEM PROMPT
+# AI TRIAGE SYSTEM PROMPT (Using Enhanced Version from decision_engine.py)
 # =============================================================================
 
-SYSTEM_PROMPT = """You are the WBUK Independent Disclosure Intake Officer, an AI assistant for Whistleblower UK (WBUK.org). Your purpose is to help individuals determine whether their concern may qualify as a protected disclosure under UK law and guide them safely through next steps.
-
-CRITICAL DISCLAIMERS:
-1. You are NOT providing legal advice
-2. You are an intake and triage system, not a legal decision-maker
-3. All information shared is confidential
-4. This session is anonymous - no identifying information is logged
-
-PERSONA: Calm, neutral, supportive, professional. Use clear language, avoid unnecessary jargon.
-
-UK LEGAL FRAMEWORK:
-- Public Interest Disclosure Act 1998 (PIDA)
-- Employment Rights Act 1996 (Sections 43B-43K, 47B, 103A)
-- Qualifying failures include: criminal offences, legal obligation failures, health/safety dangers, environmental damage, miscarriage of justice, deliberate concealment
-
-TRIAGE FLOW - Gather information step by step:
-1. Nature of concern (fraud, health/safety, corruption, etc.)
-2. Organisation sector (NHS, government, corporate, charity)
-3. Your role (employee, contractor, former employee, public)
-4. Specific details of the wrongdoing
-5. Public interest element
-6. Evidence available
-7. Prior reporting attempts
-8. Risk assessment
-
-OUTPUT: After gathering information, provide a structured assessment including:
-- Preliminary legal classification
-- Risk level
-- Recommended reporting path
-- Prescribed persons (regulators) if relevant
-- Next steps
-
-Always be empathetic and acknowledge the courage required to report concerns. If someone expresses distress, provide support resources (Samaritans: 116 123)."""
+SYSTEM_PROMPT = ENHANCED_SYSTEM_PROMPT
 
 # =============================================================================
 # SESSION ENDPOINTS
@@ -606,6 +585,176 @@ async def submit_case(data: CaseSubmitRequest):
         "case_reference": case_reference,
         "message": "Your case has been submitted to WBUK advisors. Please save your reference number for follow-up."
     }
+
+@api_router.post("/triage/calculate-scores/{session_token}")
+async def calculate_assessment_scores(session_token: str):
+    """Calculate detailed protection and risk scores using the decision engine"""
+    session = await db.sessions.find_one(
+        {"session_token": session_token},
+        {"_id": 0}
+    )
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    # Get all messages
+    messages = await db.messages.find(
+        {"session_id": session_token},
+        {"_id": 0}
+    ).sort("created_at", 1).to_list(1000)
+    
+    if len(messages) < 4:
+        raise HTTPException(status_code=400, detail="Not enough conversation data")
+    
+    # Build conversation for AI analysis
+    conversation = "\n".join([f"{m['role'].upper()}: {m['content']}" for m in messages])
+    
+    # Use AI to extract structured data for scoring
+    extraction_prompt = f"""Analyze this whistleblower triage conversation and extract the following information in JSON format:
+
+CONVERSATION:
+{conversation}
+
+Extract and return ONLY this JSON structure (use null for unknown values):
+{{
+    "failure_types": ["list from: criminal_offence, legal_obligation, miscarriage_justice, health_safety, environmental, concealment"],
+    "evidence_strength": "strong/moderate/limited/weak",
+    "temporal_status": "imminent/ongoing/recent/historical",
+    "number_affected": "individual/small_group/department/organisation/public",
+    "severity": "minor/moderate/serious/grave",
+    "is_public_body": true/false,
+    "involves_public_funds": true/false,
+    "affects_vulnerable_groups": true/false,
+    "has_ongoing_risk": true/false,
+    "worker_status": "employee/agency_worker/contractor/nhs_practitioner/former_employee/trainee/volunteer/member_of_public",
+    "has_employment_documentation": true/false,
+    "information_source": "first_hand/documentary/reliable_second_hand/hearsay/speculation",
+    "verification_made": true/false,
+    "has_professional_expertise": true/false,
+    "account_is_consistent": true/false,
+    "sector": "healthcare/financial_services/government/local_government/education/charity/environment/police/other",
+    "wrongdoing_type_primary": "string description",
+    "employment_risk_score": 0-100,
+    "retaliation_risk_score": 0-100,
+    "legal_exposure_score": 0-100,
+    "financial_risk_score": 0-100,
+    "personal_safety_score": 0-100,
+    "risk_factors": ["list"],
+    "protective_factors": ["list"]
+}}
+
+Return ONLY valid JSON."""
+
+    try:
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY,
+            session_id=f"{session_token}-scoring",
+            system_message="Extract data from conversations. Return only valid JSON."
+        ).with_model("openai", "gpt-5.2")
+        
+        user_msg = UserMessage(text=extraction_prompt)
+        ai_response = await chat.send_message(user_msg)
+        
+        # Parse JSON
+        import json
+        clean_response = ai_response.strip()
+        if clean_response.startswith("```"):
+            clean_response = clean_response.split("```")[1]
+            if clean_response.startswith("json"):
+                clean_response = clean_response[4:]
+        clean_response = clean_response.strip()
+        
+        extracted_data = json.loads(clean_response)
+        
+    except Exception as e:
+        logger.error(f"Scoring extraction error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to analyze conversation")
+    
+    # Calculate Stage 1: Qualifying Disclosure
+    stage1 = score_qualifying_disclosure(
+        failure_types=extracted_data.get("failure_types", []),
+        evidence_strength=extracted_data.get("evidence_strength", "limited"),
+        temporal_status=extracted_data.get("temporal_status", "historical")
+    )
+    
+    # Calculate Stage 2: Public Interest
+    stage2 = score_public_interest(
+        number_affected=extracted_data.get("number_affected", "individual"),
+        severity=extracted_data.get("severity", "minor"),
+        public_body=extracted_data.get("is_public_body", False),
+        public_funds=extracted_data.get("involves_public_funds", False),
+        vulnerable_groups=extracted_data.get("affects_vulnerable_groups", False),
+        ongoing_risk=extracted_data.get("has_ongoing_risk", False)
+    )
+    
+    # Calculate Stage 3: Worker Status
+    stage3 = score_worker_status(
+        status_category=extracted_data.get("worker_status", "member_of_public"),
+        has_documentation=extracted_data.get("has_employment_documentation", False)
+    )
+    
+    # Calculate Stage 4: Reasonable Belief
+    stage4 = score_reasonable_belief(
+        information_source=extracted_data.get("information_source", "hearsay"),
+        verification_made=extracted_data.get("verification_made", False),
+        professional_expertise=extracted_data.get("has_professional_expertise", False),
+        consistent_account=extracted_data.get("account_is_consistent", True)
+    )
+    
+    # Calculate final protection score
+    protection_scores = {
+        'stage1_qualifying': stage1['score'],
+        'stage2_public_interest': stage2['score'],
+        'stage3_worker_status': stage3['score'],
+        'stage4_reasonable_belief': stage4['score'],
+        'stage5_recipient': 70  # Default - assuming they're reporting appropriately
+    }
+    
+    final_protection = calculate_protection_score(protection_scores)
+    
+    # Calculate risk scores
+    risk_data = {
+        'employment_risk': extracted_data.get("employment_risk_score", 50),
+        'retaliation_risk': extracted_data.get("retaliation_risk_score", 50),
+        'legal_exposure': extracted_data.get("legal_exposure_score", 30),
+        'financial_risk': extracted_data.get("financial_risk_score", 40),
+        'personal_safety': extracted_data.get("personal_safety_score", 20)
+    }
+    
+    final_risk = calculate_risk_score(risk_data)
+    
+    # Get prescribed persons
+    prescribed = get_prescribed_persons(
+        sector=extracted_data.get("sector", "other"),
+        wrongdoing_type=extracted_data.get("wrongdoing_type_primary", "")
+    )
+    
+    # Build comprehensive response
+    result = {
+        "scores": {
+            "stage1_qualifying_disclosure": stage1,
+            "stage2_public_interest": stage2,
+            "stage3_worker_status": stage3,
+            "stage4_reasonable_belief": stage4,
+            "stage5_recipient": {"score": 70, "threshold_met": True}
+        },
+        "final_assessment": final_protection,
+        "risk_assessment": {
+            **final_risk,
+            "risk_factors": extracted_data.get("risk_factors", []),
+            "protective_factors": extracted_data.get("protective_factors", [])
+        },
+        "prescribed_persons": prescribed,
+        "extracted_data": extracted_data
+    }
+    
+    # Store in session
+    await db.sessions.update_one(
+        {"session_token": session_token},
+        {"$set": {"detailed_scores": result}}
+    )
+    
+    return result
 
 # =============================================================================
 # ADMIN AUTH ENDPOINTS

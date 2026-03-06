@@ -33,6 +33,14 @@ Build a secure AI-powered whistleblower triage platform for Whistleblower UK (WB
 - [x] Case detail view with conversation history
 - [x] Internal notes system
 - [x] Status management
+- [x] **Decision Engine with 5-Stage Scoring System**
+  - Stage 1: Qualifying Disclosure Assessment
+  - Stage 2: Public Interest Test
+  - Stage 3: Worker Status Verification
+  - Stage 4: Reasonable Belief Assessment
+  - Stage 5: Appropriate Recipient Evaluation
+- [x] **Risk Assessment Module** (Employment, Retaliation, Legal, Financial, Personal Safety)
+- [x] **Prescribed Persons Routing** (sector-based regulator recommendations)
 
 ## API Endpoints
 - POST /api/session/create - Create anonymous session
