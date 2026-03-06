@@ -4,9 +4,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShieldCheck, Lock, Loader2, ArrowLeft } from "lucide-react";
+import { Lock, Loader2, ArrowLeft } from "lucide-react";
 import { adminLogin } from "@/lib/api";
 import { toast } from "sonner";
+
+// WBUK Logo Component
+const WBUKLogo = ({ className = "" }) => (
+  <div className={`flex items-center gap-2 ${className}`}>
+    <div className="flex flex-col leading-none">
+      <span className="font-heading font-extrabold text-2xl tracking-tight text-wbuk-red">WB</span>
+      <span className="font-heading font-extrabold text-2xl tracking-tight text-wbuk-red">UK</span>
+    </div>
+    <div>
+      <span className="font-heading font-bold text-lg text-gray-800">Advisor Portal</span>
+    </div>
+  </div>
+);
 
 export default function AdminLogin() {
   const navigate = useNavigate();
@@ -46,55 +59,49 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-3 mb-4">
-            <ShieldCheck className="h-10 w-10 text-teal-500" />
-            <div className="text-left">
-              <h1 className="font-serif font-bold text-white text-2xl">WBUK</h1>
-              <p className="text-sm text-slate-400">Advisor Portal</p>
-            </div>
-          </div>
+          <WBUKLogo className="justify-center" />
         </div>
 
-        <Card className="border-slate-800 bg-slate-800/50">
+        <Card className="border-t-4 border-wbuk-red rounded-none shadow-lg">
           <CardHeader className="text-center">
-            <CardTitle className="font-serif text-white">Advisor Login</CardTitle>
-            <CardDescription className="text-slate-400">
+            <CardTitle className="font-heading text-gray-900">Advisor Login</CardTitle>
+            <CardDescription className="text-gray-600">
               Access the case management dashboard
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-200">Email</Label>
+                <Label htmlFor="email" className="text-gray-700">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="advisor@wbuk.org"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
+                  className="rounded-none border-gray-300 focus:border-wbuk-red focus:ring-wbuk-red"
                   data-testid="admin-email-input"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-200">Password</Label>
+                <Label htmlFor="password" className="text-gray-700">Password</Label>
                 <Input
                   id="password"
                   type="password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-500"
+                  className="rounded-none border-gray-300 focus:border-wbuk-red focus:ring-wbuk-red"
                   data-testid="admin-password-input"
                 />
               </div>
               <Button 
                 type="submit" 
-                className="w-full bg-teal-600 hover:bg-teal-700"
+                className="w-full bg-wbuk-red hover:bg-red-700 rounded-none"
                 disabled={isLoading}
                 data-testid="admin-login-button"
               >
@@ -107,10 +114,10 @@ export default function AdminLogin() {
               </Button>
             </form>
 
-            <div className="mt-6 pt-6 border-t border-slate-700">
+            <div className="mt-6 pt-6 border-t border-gray-200">
               <Button 
                 variant="ghost" 
-                className="w-full text-slate-400 hover:text-white hover:bg-slate-700"
+                className="w-full text-gray-600 hover:text-wbuk-red hover:bg-red-50"
                 onClick={() => navigate("/")}
                 data-testid="back-to-public-button"
               >
@@ -121,7 +128,7 @@ export default function AdminLogin() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-slate-500 mt-6">
+        <p className="text-center text-xs text-gray-500 mt-6">
           Authorized personnel only. All access is logged.
         </p>
       </div>

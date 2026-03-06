@@ -178,8 +178,8 @@ export default function AdminCaseDetail() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-wbuk-red" />
       </div>
     );
   }
@@ -189,24 +189,28 @@ export default function AdminCaseDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white shadow-sm">
+      <header className="sticky top-0 z-50 w-full bg-white border-b-4 border-wbuk-red">
         <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => navigate("/admin/dashboard")}
+              className="hover:bg-red-50"
               data-testid="back-to-dashboard-button"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-3">
-              <ShieldCheck className="h-6 w-6 text-teal-700" />
+              <div className="flex flex-col leading-none">
+                <span className="font-heading font-extrabold text-lg text-wbuk-red">WB</span>
+                <span className="font-heading font-extrabold text-lg text-wbuk-red">UK</span>
+              </div>
               <div>
-                <h1 className="font-mono font-bold text-slate-900">{caseReference}</h1>
-                <p className="text-xs text-slate-500">Case Detail</p>
+                <h1 className="font-mono font-bold text-gray-900">{caseReference}</h1>
+                <p className="text-xs text-gray-500">Case Detail</p>
               </div>
             </div>
           </div>
@@ -223,47 +227,47 @@ export default function AdminCaseDetail() {
           {/* Left Column - Case Details */}
           <div className="lg:col-span-2 space-y-6">
             {/* Executive Summary */}
-            <Card>
+            <Card className="rounded-none border-t-4 border-t-wbuk-red">
               <CardHeader>
-                <CardTitle className="font-serif flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-teal-600" />
+                <CardTitle className="font-heading flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-wbuk-red" />
                   Executive Summary
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-700 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed">
                   {caseData.ai_summary?.executive_summary || "No summary available"}
                 </p>
               </CardContent>
             </Card>
 
             {/* Classification */}
-            <Card>
+            <Card className="rounded-none">
               <CardHeader>
-                <CardTitle className="font-serif">Classification</CardTitle>
+                <CardTitle className="font-heading">Classification</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-slate-500">Organisation Sector</p>
+                    <p className="text-sm text-gray-500">Organisation Sector</p>
                     <p className="font-medium">
                       {caseData.classification?.organisation_sector || "—"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-500">Type of Wrongdoing</p>
+                    <p className="text-sm text-gray-500">Type of Wrongdoing</p>
                     <p className="font-medium">
                       {caseData.classification?.wrongdoing_type || "—"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-500">Whistleblower Role</p>
+                    <p className="text-sm text-gray-500">Whistleblower Role</p>
                     <p className="font-medium">
                       {caseData.classification?.whistleblower_role || "—"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-500">Evidence Available</p>
+                    <p className="text-sm text-gray-500">Evidence Available</p>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {caseData.classification?.evidence_available?.length > 0 ? (
                         caseData.classification.evidence_available.map((e, i) => (
@@ -279,17 +283,17 @@ export default function AdminCaseDetail() {
             </Card>
 
             {/* Legal Assessment */}
-            <Card>
+            <Card className="rounded-none">
               <CardHeader>
-                <CardTitle className="font-serif flex items-center gap-2">
-                  <Scale className="h-5 w-5 text-teal-600" />
+                <CardTitle className="font-heading flex items-center gap-2">
+                  <Scale className="h-5 w-5 text-wbuk-red" />
                   Legal Assessment
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-slate-500">Protected Disclosure</p>
+                    <p className="text-sm text-gray-500">Protected Disclosure</p>
                     <div className="flex items-center gap-2 mt-1">
                       {caseData.legal_assessment?.likely_protected_disclosure ? (
                         <>
@@ -307,13 +311,13 @@ export default function AdminCaseDetail() {
                     </div>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-500">Confidence</p>
+                    <p className="text-sm text-gray-500">Confidence</p>
                     <Badge variant="outline" className="mt-1">
                       {caseData.legal_assessment?.confidence || "Low"}
                     </Badge>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-sm text-slate-500">Prescribed Persons</p>
+                    <p className="text-sm text-gray-500">Prescribed Persons</p>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {caseData.legal_assessment?.prescribed_persons?.length > 0 ? (
                         caseData.legal_assessment.prescribed_persons.map((p, i) => (
@@ -329,29 +333,29 @@ export default function AdminCaseDetail() {
             </Card>
 
             {/* Risk Assessment */}
-            <Card>
+            <Card className="rounded-none">
               <CardHeader>
-                <CardTitle className="font-serif flex items-center gap-2">
+                <CardTitle className="font-heading flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5 text-amber-600" />
                   Risk Assessment
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-3 gap-4 mb-4">
-                  <div className="text-center p-3 bg-slate-50 rounded-lg">
-                    <p className="text-xs text-slate-500">Overall</p>
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <p className="text-xs text-gray-500">Overall</p>
                     <p className={`font-bold ${getRiskColor(caseData.risk_assessment?.overall_risk)}`}>
                       {caseData.risk_assessment?.overall_risk || "—"}
                     </p>
                   </div>
-                  <div className="text-center p-3 bg-slate-50 rounded-lg">
-                    <p className="text-xs text-slate-500">Employment</p>
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <p className="text-xs text-gray-500">Employment</p>
                     <p className={`font-bold ${getRiskColor(caseData.risk_assessment?.employment_risk)}`}>
                       {caseData.risk_assessment?.employment_risk || "—"}
                     </p>
                   </div>
-                  <div className="text-center p-3 bg-slate-50 rounded-lg">
-                    <p className="text-xs text-slate-500">Retaliation</p>
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <p className="text-xs text-gray-500">Retaliation</p>
                     <p className={`font-bold ${getRiskColor(caseData.risk_assessment?.retaliation_risk)}`}>
                       {caseData.risk_assessment?.retaliation_risk || "—"}
                     </p>
@@ -359,8 +363,8 @@ export default function AdminCaseDetail() {
                 </div>
                 {caseData.risk_assessment?.risk_factors?.length > 0 && (
                   <>
-                    <p className="text-sm font-medium text-slate-700 mb-2">Risk Factors</p>
-                    <ul className="list-disc list-inside text-sm text-slate-600 space-y-1">
+                    <p className="text-sm font-medium text-gray-700 mb-2">Risk Factors</p>
+                    <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
                       {caseData.risk_assessment.risk_factors.map((f, i) => (
                         <li key={i}>{f}</li>
                       ))}
@@ -371,22 +375,22 @@ export default function AdminCaseDetail() {
             </Card>
 
             {/* Evidence */}
-            <Card>
+            <Card className="rounded-none">
               <CardHeader>
-                <CardTitle className="font-serif flex items-center gap-2">
-                  <Paperclip className="h-5 w-5 text-teal-600" />
+                <CardTitle className="font-heading flex items-center gap-2">
+                  <Paperclip className="h-5 w-5 text-wbuk-red" />
                   Evidence ({evidence.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {evidence.length === 0 ? (
-                  <p className="text-sm text-slate-500 text-center py-4">No evidence uploaded</p>
+                  <p className="text-sm text-gray-500 text-center py-4">No evidence uploaded</p>
                 ) : (
                   <div className="space-y-2">
                     {evidence.map((file) => (
                       <div 
                         key={file.file_id}
-                        className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                       >
                         <div className="flex items-center gap-3">
                           {file.file_type?.match(/^(jpg|jpeg|png|gif)$/i) ? (
@@ -400,7 +404,7 @@ export default function AdminCaseDetail() {
                             <p className="text-sm font-medium truncate max-w-[200px]">
                               {file.original_filename}
                             </p>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-gray-500">
                               {(file.file_size / 1024).toFixed(1)} KB • {file.file_type?.toUpperCase()}
                             </p>
                           </div>
@@ -408,6 +412,7 @@ export default function AdminCaseDetail() {
                         <Button
                           variant="outline"
                           size="sm"
+                          className="rounded-none border-wbuk-red text-wbuk-red hover:bg-red-50"
                           onClick={async () => {
                             try {
                               const token = localStorage.getItem("adminToken");
@@ -441,10 +446,10 @@ export default function AdminCaseDetail() {
             </Card>
 
             {/* Conversation */}
-            <Card>
+            <Card className="rounded-none">
               <CardHeader>
-                <CardTitle className="font-serif flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5 text-teal-600" />
+                <CardTitle className="font-heading flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-wbuk-red" />
                   Triage Conversation
                 </CardTitle>
               </CardHeader>
@@ -459,8 +464,8 @@ export default function AdminCaseDetail() {
                         <div
                           className={`max-w-[80%] px-4 py-3 rounded-lg ${
                             message.role === "user"
-                              ? "bg-slate-900 text-white"
-                              : "bg-slate-100 text-slate-800"
+                              ? "bg-wbuk-red text-white"
+                              : "bg-gray-100 text-gray-800"
                           }`}
                         >
                           <div className="flex items-center gap-2 mb-1 text-xs opacity-70">
@@ -480,19 +485,19 @@ export default function AdminCaseDetail() {
           {/* Right Column - Actions & Notes */}
           <div className="space-y-6">
             {/* Status Management */}
-            <Card>
+            <Card className="rounded-none border-t-4 border-t-wbuk-red">
               <CardHeader>
-                <CardTitle className="font-serif text-lg">Case Actions</CardTitle>
+                <CardTitle className="font-heading text-lg">Case Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <p className="text-sm text-slate-500 mb-2">Update Status</p>
+                  <p className="text-sm text-gray-500 mb-2">Update Status</p>
                   <Select
                     value={caseData.case_status}
                     onValueChange={handleStatusChange}
                     disabled={isUpdatingStatus}
                   >
-                    <SelectTrigger data-testid="status-select">
+                    <SelectTrigger data-testid="status-select" className="rounded-none">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -507,11 +512,11 @@ export default function AdminCaseDetail() {
                 </div>
                 <Separator />
                 <div>
-                  <p className="text-sm text-slate-500 mb-1">Submitted</p>
+                  <p className="text-sm text-gray-500 mb-1">Submitted</p>
                   <p className="font-medium">{formatDate(caseData.submitted_at)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500 mb-1">Urgency</p>
+                  <p className="text-sm text-gray-500 mb-1">Urgency</p>
                   <Badge variant="outline">
                     {caseData.ai_summary?.urgency_level || "Standard"}
                   </Badge>
@@ -520,26 +525,26 @@ export default function AdminCaseDetail() {
             </Card>
 
             {/* Recommended Actions */}
-            <Card>
+            <Card className="rounded-none">
               <CardHeader>
-                <CardTitle className="font-serif text-lg">Recommended Actions</CardTitle>
+                <CardTitle className="font-heading text-lg">Recommended Actions</CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
                   {caseData.ai_summary?.recommended_actions?.map((action, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-teal-600 flex-shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-4 w-4 text-wbuk-red flex-shrink-0 mt-0.5" />
                       <span>{action}</span>
                     </li>
-                  )) || <li className="text-slate-500">No recommendations</li>}
+                  )) || <li className="text-gray-500">No recommendations</li>}
                 </ul>
               </CardContent>
             </Card>
 
             {/* Internal Notes */}
-            <Card>
+            <Card className="rounded-none">
               <CardHeader>
-                <CardTitle className="font-serif text-lg">Internal Notes</CardTitle>
+                <CardTitle className="font-heading text-lg">Internal Notes</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -547,11 +552,11 @@ export default function AdminCaseDetail() {
                     placeholder="Add a note..."
                     value={newNote}
                     onChange={(e) => setNewNote(e.target.value)}
-                    className="min-h-[80px]"
+                    className="min-h-[80px] rounded-none"
                     data-testid="note-input"
                   />
                   <Button
-                    className="w-full mt-2 bg-teal-600 hover:bg-teal-700"
+                    className="w-full mt-2 bg-wbuk-red hover:bg-red-700 rounded-none"
                     onClick={handleAddNote}
                     disabled={!newNote.trim() || isAddingNote}
                     data-testid="add-note-button"
@@ -569,8 +574,8 @@ export default function AdminCaseDetail() {
                   <div className="space-y-3">
                     {caseData.notes?.length > 0 ? (
                       caseData.notes.map((note) => (
-                        <div key={note.note_id} className="p-3 bg-slate-50 rounded-lg">
-                          <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                        <div key={note.note_id} className="p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
                             <User className="h-3 w-3" />
                             <span>{note.created_by_name}</span>
                             <span>•</span>
@@ -581,7 +586,7 @@ export default function AdminCaseDetail() {
                         </div>
                       ))
                     ) : (
-                      <p className="text-sm text-slate-500 text-center py-4">No notes yet</p>
+                      <p className="text-sm text-gray-500 text-center py-4">No notes yet</p>
                     )}
                   </div>
                 </ScrollArea>

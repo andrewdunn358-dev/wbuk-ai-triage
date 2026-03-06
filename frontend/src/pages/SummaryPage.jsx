@@ -98,10 +98,10 @@ export default function SummaryPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-teal-600 mx-auto mb-4" />
-          <p className="text-slate-600">Generating your case summary...</p>
+          <Loader2 className="h-12 w-12 animate-spin text-wbuk-red mx-auto mb-4" />
+          <p className="text-gray-600">Generating your case summary...</p>
         </div>
       </div>
     );
@@ -109,23 +109,23 @@ export default function SummaryPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <Card className="max-w-lg w-full">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="max-w-lg w-full rounded-none border-t-4 border-t-wbuk-red">
           <CardContent className="pt-8 pb-8 px-6 text-center">
-            <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="h-8 w-8 text-teal-700" />
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 className="h-8 w-8 text-wbuk-red" />
             </div>
-            <h2 className="font-serif text-2xl font-bold text-slate-900 mb-2">
+            <h2 className="font-heading text-2xl font-bold text-gray-900 mb-2">
               Case Submitted
             </h2>
-            <p className="text-slate-600 mb-6">
+            <p className="text-gray-600 mb-6">
               Your case has been submitted to WBUK advisors for review.
             </p>
             
-            <div className="bg-slate-50 rounded-lg p-4 mb-6">
-              <p className="text-sm text-slate-500 mb-2">Your Case Reference</p>
+            <div className="bg-gray-50 p-4 mb-6">
+              <p className="text-sm text-gray-500 mb-2">Your Case Reference</p>
               <div className="flex items-center justify-center gap-2">
-                <span className="font-mono text-xl font-bold text-slate-900" data-testid="case-reference">
+                <span className="font-mono text-xl font-bold text-gray-900" data-testid="case-reference">
                   {caseReference}
                 </span>
                 <Button variant="ghost" size="icon" onClick={copyReference} data-testid="copy-reference-button">
@@ -134,15 +134,15 @@ export default function SummaryPage() {
               </div>
             </div>
             
-            <p className="text-sm text-slate-500 mb-6">
+            <p className="text-sm text-gray-500 mb-6">
               Please save this reference number. You can use it if you need to follow up on your case.
             </p>
             
             <div className="flex flex-col gap-3">
-              <Button onClick={() => navigate("/")} data-testid="return-home-button">
+              <Button onClick={() => navigate("/")} className="bg-wbuk-red hover:bg-red-700 rounded-none" data-testid="return-home-button">
                 Return to Home
               </Button>
-              <Button variant="outline" onClick={() => window.open("https://wbuk.org/contact-us", "_blank")}>
+              <Button variant="outline" className="rounded-none" onClick={() => window.open("https://wbuk.org/contact-us", "_blank")}>
                 Contact WBUK
               </Button>
             </div>
@@ -153,22 +153,23 @@ export default function SummaryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 backdrop-blur">
+      <header className="sticky top-0 z-50 w-full bg-white border-b-4 border-wbuk-red">
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => navigate(`/chat/${sessionToken}`)}
+              className="hover:bg-red-50"
               data-testid="back-to-chat-button"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-2">
-              <FileText className="h-6 w-6 text-teal-700" />
-              <span className="font-serif font-bold text-slate-900">Case Summary</span>
+              <FileText className="h-6 w-6 text-wbuk-red" />
+              <span className="font-heading font-bold text-gray-900">Case Summary</span>
             </div>
           </div>
         </div>
@@ -190,15 +191,15 @@ export default function SummaryPage() {
         {summary && (
           <div className="space-y-6">
             {/* Executive Summary */}
-            <Card>
+            <Card className="rounded-none border-t-4 border-t-wbuk-red">
               <CardHeader>
-                <CardTitle className="font-serif flex items-center gap-2">
-                  <ShieldCheck className="h-5 w-5 text-teal-600" />
+                <CardTitle className="font-heading flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-wbuk-red" />
                   Executive Summary
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-700 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed">
                   {summary.executive_summary || "Summary not available"}
                 </p>
               </CardContent>
@@ -207,41 +208,41 @@ export default function SummaryPage() {
             {/* Classification & Legal Assessment */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Classification */}
-              <Card>
+              <Card className="rounded-none">
                 <CardHeader>
-                  <CardTitle className="font-serif text-lg">Classification</CardTitle>
+                  <CardTitle className="font-heading text-lg">Classification</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <p className="text-sm text-slate-500">Organisation Sector</p>
-                    <p className="font-medium text-slate-900">
+                    <p className="text-sm text-gray-500">Organisation Sector</p>
+                    <p className="font-medium text-gray-900">
                       {summary.classification?.organisation_sector || "Not specified"}
                     </p>
                   </div>
                   <Separator />
                   <div>
-                    <p className="text-sm text-slate-500">Type of Wrongdoing</p>
-                    <p className="font-medium text-slate-900">
+                    <p className="text-sm text-gray-500">Type of Wrongdoing</p>
+                    <p className="font-medium text-gray-900">
                       {summary.classification?.wrongdoing_type || "Not specified"}
                     </p>
                   </div>
                   <Separator />
                   <div>
-                    <p className="text-sm text-slate-500">Your Role</p>
-                    <p className="font-medium text-slate-900">
+                    <p className="text-sm text-gray-500">Your Role</p>
+                    <p className="font-medium text-gray-900">
                       {summary.classification?.whistleblower_role || "Not specified"}
                     </p>
                   </div>
                   <Separator />
                   <div>
-                    <p className="text-sm text-slate-500">Evidence Available</p>
+                    <p className="text-sm text-gray-500">Evidence Available</p>
                     <div className="flex flex-wrap gap-2 mt-1">
                       {summary.classification?.evidence_available?.length > 0 ? (
                         summary.classification.evidence_available.map((evidence, i) => (
                           <Badge key={i} variant="outline">{evidence}</Badge>
                         ))
                       ) : (
-                        <span className="text-slate-600">None specified</span>
+                        <span className="text-gray-600">None specified</span>
                       )}
                     </div>
                   </div>
@@ -249,16 +250,16 @@ export default function SummaryPage() {
               </Card>
 
               {/* Legal Assessment */}
-              <Card>
+              <Card className="rounded-none">
                 <CardHeader>
-                  <CardTitle className="font-serif text-lg flex items-center gap-2">
-                    <Scale className="h-5 w-5 text-teal-600" />
+                  <CardTitle className="font-heading text-lg flex items-center gap-2">
+                    <Scale className="h-5 w-5 text-wbuk-red" />
                     Legal Assessment
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <p className="text-sm text-slate-500">Protected Disclosure</p>
+                    <p className="text-sm text-gray-500">Protected Disclosure</p>
                     <div className="flex items-center gap-2 mt-1">
                       {summary.legal_assessment?.likely_protected_disclosure ? (
                         <>
@@ -271,36 +272,36 @@ export default function SummaryPage() {
                           <span className="font-medium text-amber-700">May Not Qualify</span>
                         </>
                       ) : (
-                        <span className="text-slate-600">To be assessed</span>
+                        <span className="text-gray-600">To be assessed</span>
                       )}
                     </div>
                   </div>
                   <Separator />
                   <div>
-                    <p className="text-sm text-slate-500">Confidence Level</p>
+                    <p className="text-sm text-gray-500">Confidence Level</p>
                     <Badge variant="outline" className="mt-1">
                       {summary.legal_assessment?.confidence || "Low"}
                     </Badge>
                   </div>
                   <Separator />
                   <div>
-                    <p className="text-sm text-slate-500">Relevant Legislation</p>
+                    <p className="text-sm text-gray-500">Relevant Legislation</p>
                     <div className="flex flex-wrap gap-2 mt-1">
                       {summary.legal_assessment?.relevant_legislation?.map((leg, i) => (
                         <Badge key={i} variant="secondary" className="text-xs">{leg}</Badge>
-                      )) || <span className="text-slate-600">PIDA 1998</span>}
+                      )) || <span className="text-gray-600">PIDA 1998</span>}
                     </div>
                   </div>
                   <Separator />
                   <div>
-                    <p className="text-sm text-slate-500">Prescribed Persons (Regulators)</p>
+                    <p className="text-sm text-gray-500">Prescribed Persons (Regulators)</p>
                     <div className="flex flex-wrap gap-2 mt-1">
                       {summary.legal_assessment?.prescribed_persons?.length > 0 ? (
                         summary.legal_assessment.prescribed_persons.map((person, i) => (
                           <Badge key={i} variant="outline">{person}</Badge>
                         ))
                       ) : (
-                        <span className="text-slate-600">To be determined</span>
+                        <span className="text-gray-600">To be determined</span>
                       )}
                     </div>
                   </div>
@@ -309,35 +310,35 @@ export default function SummaryPage() {
             </div>
 
             {/* Risk Assessment */}
-            <Card>
+            <Card className="rounded-none">
               <CardHeader>
-                <CardTitle className="font-serif flex items-center gap-2">
+                <CardTitle className="font-heading flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5 text-amber-600" />
                   Risk Assessment
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <div className="text-center p-4 bg-slate-50 rounded-lg">
-                    <p className="text-sm text-slate-500 mb-2">Overall Risk</p>
+                  <div className="text-center p-4 bg-gray-50">
+                    <p className="text-sm text-gray-500 mb-2">Overall Risk</p>
                     <Badge className={getRiskColor(summary.risk_assessment?.overall_risk)}>
                       {summary.risk_assessment?.overall_risk || "Unknown"}
                     </Badge>
                   </div>
-                  <div className="text-center p-4 bg-slate-50 rounded-lg">
-                    <p className="text-sm text-slate-500 mb-2">Employment Risk</p>
+                  <div className="text-center p-4 bg-gray-50">
+                    <p className="text-sm text-gray-500 mb-2">Employment Risk</p>
                     <Badge className={getRiskColor(summary.risk_assessment?.employment_risk)}>
                       {summary.risk_assessment?.employment_risk || "Unknown"}
                     </Badge>
                   </div>
-                  <div className="text-center p-4 bg-slate-50 rounded-lg">
-                    <p className="text-sm text-slate-500 mb-2">Retaliation Risk</p>
+                  <div className="text-center p-4 bg-gray-50">
+                    <p className="text-sm text-gray-500 mb-2">Retaliation Risk</p>
                     <Badge className={getRiskColor(summary.risk_assessment?.retaliation_risk)}>
                       {summary.risk_assessment?.retaliation_risk || "Unknown"}
                     </Badge>
                   </div>
-                  <div className="text-center p-4 bg-slate-50 rounded-lg">
-                    <p className="text-sm text-slate-500 mb-2">Urgency</p>
+                  <div className="text-center p-4 bg-gray-50">
+                    <p className="text-sm text-gray-500 mb-2">Urgency</p>
                     <Badge variant="outline">
                       {summary.urgency || "Standard"}
                     </Badge>
@@ -346,8 +347,8 @@ export default function SummaryPage() {
                 
                 {summary.risk_assessment?.risk_factors?.length > 0 && (
                   <div>
-                    <p className="text-sm font-medium text-slate-700 mb-2">Risk Factors</p>
-                    <ul className="list-disc list-inside text-sm text-slate-600 space-y-1">
+                    <p className="text-sm font-medium text-gray-700 mb-2">Risk Factors</p>
+                    <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
                       {summary.risk_assessment.risk_factors.map((factor, i) => (
                         <li key={i}>{factor}</li>
                       ))}
@@ -358,42 +359,43 @@ export default function SummaryPage() {
             </Card>
 
             {/* Recommended Actions */}
-            <Card>
+            <Card className="rounded-none">
               <CardHeader>
-                <CardTitle className="font-serif">Recommended Actions</CardTitle>
+                <CardTitle className="font-heading">Recommended Actions</CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
                   {summary.recommended_actions?.map((action, i) => (
                     <li key={i} className="flex items-start gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-teal-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-slate-700">{action}</span>
+                      <CheckCircle2 className="h-5 w-5 text-wbuk-red flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-700">{action}</span>
                     </li>
                   )) || (
-                    <li className="text-slate-600">Continue conversation for recommendations</li>
+                    <li className="text-gray-600">Continue conversation for recommendations</li>
                   )}
                 </ul>
               </CardContent>
             </Card>
 
             {/* Evidence Upload Section */}
-            <Card>
+            <Card className="rounded-none">
               <CardHeader>
-                <CardTitle className="font-serif flex items-center gap-2">
-                  <Upload className="h-5 w-5 text-teal-600" />
+                <CardTitle className="font-heading flex items-center gap-2">
+                  <Upload className="h-5 w-5 text-wbuk-red" />
                   Supporting Evidence
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {!showEvidenceUpload ? (
                   <div className="text-center py-6">
-                    <p className="text-slate-600 mb-4">
+                    <p className="text-gray-600 mb-4">
                       Do you have documents, emails, or other evidence to support your disclosure?
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                       <Button
                         variant="outline"
                         onClick={() => setShowEvidenceUpload(true)}
+                        className="rounded-none border-wbuk-red text-wbuk-red hover:bg-red-50"
                         data-testid="show-upload-button"
                       >
                         <Upload className="h-4 w-4 mr-2" />
@@ -402,7 +404,7 @@ export default function SummaryPage() {
                       <Button
                         variant="ghost"
                         onClick={() => {}}
-                        className="text-slate-500"
+                        className="text-gray-500"
                       >
                         Skip for now
                       </Button>
@@ -432,7 +434,7 @@ export default function SummaryPage() {
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Button 
                 variant="outline" 
-                className="flex-1"
+                className="flex-1 rounded-none"
                 onClick={() => navigate(`/chat/${sessionToken}`)}
                 data-testid="continue-chat-button"
               >
@@ -440,7 +442,7 @@ export default function SummaryPage() {
                 Continue Conversation
               </Button>
               <Button 
-                className="flex-1 bg-teal-600 hover:bg-teal-700"
+                className="flex-1 bg-wbuk-red hover:bg-red-700 rounded-none"
                 onClick={handleSubmit}
                 disabled={isSubmitting}
                 data-testid="submit-case-button"

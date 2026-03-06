@@ -1,10 +1,24 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShieldCheck, Lock, MessageSquare, FileText, Eye, AlertTriangle } from "lucide-react";
+import { Lock, MessageSquare, FileText, Shield, ChevronRight, Users, Scale, Phone } from "lucide-react";
 import { createSession } from "@/lib/api";
 import { toast } from "sonner";
 import { useState } from "react";
+
+// WBUK Logo Component
+const WBUKLogo = ({ className = "" }) => (
+  <div className={`flex items-center gap-2 ${className}`}>
+    <div className="flex flex-col leading-none">
+      <span className="font-heading font-extrabold text-2xl tracking-tight text-black">WB</span>
+      <span className="font-heading font-extrabold text-2xl tracking-tight text-black">UK</span>
+    </div>
+    <div className="flex flex-col">
+      <span className="font-heading font-bold text-lg text-black">WhistleblowersUK</span>
+      <span className="text-xs text-gray-500">educate, support & champion whistleblowing</span>
+    </div>
+  </div>
+);
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -24,142 +38,145 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="h-8 w-8 text-teal-700" />
-            <div>
-              <h1 className="font-serif font-bold text-slate-900 text-lg">WBUK</h1>
-              <p className="text-xs text-slate-500 -mt-1">AI Triage</p>
-            </div>
-          </div>
+      <header className="sticky top-0 z-50 w-full bg-white border-b-4 border-wbuk-red">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 h-20 flex items-center justify-between">
+          <WBUKLogo />
+          
+          <nav className="hidden md:flex items-center gap-8">
+            <a href="https://wbuk.org" target="_blank" rel="noopener noreferrer" className="text-gray-700 hover:text-wbuk-red transition-colors">
+              Home
+            </a>
+            <a href="https://wbuk.org/about-us" target="_blank" rel="noopener noreferrer" className="text-gray-700 hover:text-wbuk-red transition-colors">
+              About Us
+            </a>
+            <a href="https://wbuk.org/services" target="_blank" rel="noopener noreferrer" className="text-gray-700 hover:text-wbuk-red transition-colors">
+              Services
+            </a>
+            <a href="https://wbuk.org/contact-us" target="_blank" rel="noopener noreferrer" className="text-gray-700 hover:text-wbuk-red transition-colors">
+              Contact Us
+            </a>
+            <Button 
+              className="bg-wbuk-red hover:bg-red-700 text-white rounded-none px-6"
+              onClick={() => navigate("/admin")}
+              data-testid="admin-login-link"
+            >
+              Advisor Login
+            </Button>
+          </nav>
+
           <Button 
-            variant="ghost" 
-            size="sm"
+            className="md:hidden bg-wbuk-red hover:bg-red-700 text-white rounded-none"
             onClick={() => navigate("/admin")}
-            data-testid="admin-login-link"
           >
-            Advisor Login
+            Login
           </Button>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="relative py-24 md:py-32 overflow-hidden">
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ 
-            backgroundImage: "url('https://images.unsplash.com/photo-1710198332438-245579acbb1f?crop=entropy&cs=srgb&fm=jpg&q=85')",
-          }}
-        />
-        <div className="absolute inset-0 hero-overlay" />
-        
-        <div className="relative max-w-7xl mx-auto px-4 md:px-8">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-teal-700/20 border border-teal-600/30 rounded-full px-4 py-2 mb-6">
-              <Lock className="h-4 w-4 text-teal-400" />
-              <span className="text-sm text-teal-300 font-medium">Confidential & Secure</span>
-            </div>
-            
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight mb-6">
-              Speak Freely.<br />
-              <span className="text-teal-400">We're Listening.</span>
-            </h1>
-            
-            <p className="text-lg md:text-xl text-slate-300 leading-relaxed mb-8 max-w-xl">
-              Our AI-powered triage system helps you understand whether your concern 
-              may qualify as a protected disclosure under UK law.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button 
-                size="lg" 
-                className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-6 text-lg"
-                onClick={handleStartChat}
-                disabled={isLoading}
-                data-testid="start-chat-button"
-              >
-                {isLoading ? "Starting..." : "Start Confidential Chat"}
-                <MessageSquare className="ml-2 h-5 w-5" />
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="border-slate-400 text-white hover:bg-white/10 px-8 py-6 text-lg"
-                onClick={() => window.open("https://wbuk.org", "_blank")}
-                data-testid="learn-more-button"
-              >
-                Learn More
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Security Notice */}
-      <section className="py-16 bg-white border-y border-slate-200">
+      <section className="py-16 md:py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex items-start gap-4 p-6 bg-slate-50 rounded-lg border border-slate-200">
-            <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0 mt-1" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h3 className="font-semibold text-slate-900 mb-2">Important Information</h3>
-              <p className="text-slate-600 leading-relaxed">
-                This AI assistant provides guidance, not legal advice. Any assessment is preliminary 
-                and subject to review by WBUK's qualified advisors. Your conversation is anonymous 
-                and encrypted. We do not log IP addresses or store identifying information.
+              <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-wbuk-red mb-6">
+                AI Triage Service
+              </h1>
+              <p className="text-lg md:text-xl text-gray-700 leading-relaxed mb-8">
+                Our confidential AI-powered service helps you understand whether your concern 
+                may qualify as a protected disclosure under UK law. Speak freely - we're here to help.
               </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button 
+                  size="lg" 
+                  className="bg-wbuk-red hover:bg-red-700 text-white rounded-none px-8 py-6 text-lg"
+                  onClick={handleStartChat}
+                  disabled={isLoading}
+                  data-testid="start-chat-button"
+                >
+                  {isLoading ? "Starting..." : "Start Confidential Chat"}
+                  <ChevronRight className="ml-2 h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+            <div className="relative">
+              <div className="bg-white p-8 shadow-lg border-l-4 border-wbuk-red">
+                <div className="flex items-center gap-3 mb-4">
+                  <Lock className="h-8 w-8 text-wbuk-red" />
+                  <h3 className="font-heading font-bold text-xl">100% Confidential</h3>
+                </div>
+                <ul className="space-y-3 text-gray-600">
+                  <li className="flex items-start gap-2">
+                    <Shield className="h-5 w-5 text-wbuk-red flex-shrink-0 mt-0.5" />
+                    <span>Anonymous session - no IP logging</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Shield className="h-5 w-5 text-wbuk-red flex-shrink-0 mt-0.5" />
+                    <span>Encrypted conversations</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Shield className="h-5 w-5 text-wbuk-red flex-shrink-0 mt-0.5" />
+                    <span>No personal data stored unless you choose</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Shield className="h-5 w-5 text-wbuk-red flex-shrink-0 mt-0.5" />
+                    <span>Evidence metadata automatically stripped</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* How It Works */}
-      <section className="py-24 bg-slate-50">
+      <section className="py-16 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="text-center mb-16">
-            <h2 className="font-serif text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-              How It Works
-            </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Our secure triage process guides you through understanding your situation
-            </p>
-          </div>
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-wbuk-red mb-4">
+            How It Works
+          </h2>
+          <p className="text-lg text-gray-600 mb-12 max-w-3xl">
+            Our AI triage service guides you through a structured conversation to assess your situation 
+            and provide guidance on next steps.
+          </p>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
-              <CardContent className="pt-8 pb-8 px-6 text-center">
-                <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <MessageSquare className="h-8 w-8 text-teal-700" />
+            <Card className="border-0 shadow-none bg-gray-50 rounded-none">
+              <CardContent className="pt-8 pb-8 px-6">
+                <div className="w-12 h-12 bg-wbuk-red text-white flex items-center justify-center text-xl font-bold mb-4">
+                  1
                 </div>
-                <h3 className="font-serif font-semibold text-xl text-slate-900 mb-3">1. Share Your Concern</h3>
-                <p className="text-slate-600">
-                  Describe your situation to our AI assistant in a confidential, anonymous chat.
+                <h3 className="font-heading font-bold text-xl mb-3">Share Your Concern</h3>
+                <p className="text-gray-600">
+                  Describe your situation to our AI assistant in a confidential, anonymous chat. 
+                  Take your time - there's no pressure.
                 </p>
               </CardContent>
             </Card>
             
-            <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
-              <CardContent className="pt-8 pb-8 px-6 text-center">
-                <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FileText className="h-8 w-8 text-teal-700" />
+            <Card className="border-0 shadow-none bg-gray-50 rounded-none">
+              <CardContent className="pt-8 pb-8 px-6">
+                <div className="w-12 h-12 bg-wbuk-red text-white flex items-center justify-center text-xl font-bold mb-4">
+                  2
                 </div>
-                <h3 className="font-serif font-semibold text-xl text-slate-900 mb-3">2. Get Assessment</h3>
-                <p className="text-slate-600">
-                  Receive a structured analysis of whether your disclosure may be legally protected.
+                <h3 className="font-heading font-bold text-xl mb-3">Get Assessment</h3>
+                <p className="text-gray-600">
+                  Receive a detailed analysis based on UK whistleblowing law (PIDA 1998) 
+                  including risk assessment and legal classification.
                 </p>
               </CardContent>
             </Card>
             
-            <Card className="bg-white border-slate-200 hover:shadow-md transition-shadow">
-              <CardContent className="pt-8 pb-8 px-6 text-center">
-                <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Eye className="h-8 w-8 text-teal-700" />
+            <Card className="border-0 shadow-none bg-gray-50 rounded-none">
+              <CardContent className="pt-8 pb-8 px-6">
+                <div className="w-12 h-12 bg-wbuk-red text-white flex items-center justify-center text-xl font-bold mb-4">
+                  3
                 </div>
-                <h3 className="font-serif font-semibold text-xl text-slate-900 mb-3">3. Submit for Review</h3>
-                <p className="text-slate-600">
-                  Choose to submit your case to WBUK advisors for professional guidance and support.
+                <h3 className="font-heading font-bold text-xl mb-3">Submit for Review</h3>
+                <p className="text-gray-600">
+                  Choose to submit your case to WBUK's qualified advisors for professional 
+                  guidance and ongoing support.
                 </p>
               </CardContent>
             </Card>
@@ -168,63 +185,73 @@ export default function LandingPage() {
       </section>
 
       {/* Legal Framework */}
-      <section className="py-24 bg-white">
+      <section className="py-16 md:py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="font-serif text-3xl md:text-4xl font-bold text-slate-900 mb-6">
+              <h2 className="font-heading text-3xl md:text-4xl font-bold text-wbuk-red mb-6">
                 Protected Under UK Law
               </h2>
-              <p className="text-lg text-slate-600 mb-6 leading-relaxed">
+              <p className="text-lg text-gray-700 mb-6 leading-relaxed">
                 The Public Interest Disclosure Act 1998 (PIDA) provides legal protection for 
-                workers who report certain types of wrongdoing. Our AI helps you understand 
-                if your situation may qualify.
+                workers who report certain types of wrongdoing. Our AI understands this legislation 
+                and helps assess your situation.
               </p>
-              <ul className="space-y-3 text-slate-600">
-                <li className="flex items-start gap-3">
-                  <ShieldCheck className="h-5 w-5 text-teal-600 mt-1 flex-shrink-0" />
-                  <span>Criminal offences and legal violations</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <ShieldCheck className="h-5 w-5 text-teal-600 mt-1 flex-shrink-0" />
-                  <span>Health and safety dangers</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <ShieldCheck className="h-5 w-5 text-teal-600 mt-1 flex-shrink-0" />
-                  <span>Environmental damage</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <ShieldCheck className="h-5 w-5 text-teal-600 mt-1 flex-shrink-0" />
-                  <span>Fraud and financial misconduct</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <ShieldCheck className="h-5 w-5 text-teal-600 mt-1 flex-shrink-0" />
-                  <span>Cover-ups and deliberate concealment</span>
-                </li>
-              </ul>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex items-start gap-3">
+                  <Scale className="h-6 w-6 text-wbuk-red flex-shrink-0" />
+                  <span className="text-gray-700">Criminal offences</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Scale className="h-6 w-6 text-wbuk-red flex-shrink-0" />
+                  <span className="text-gray-700">Health & safety risks</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Scale className="h-6 w-6 text-wbuk-red flex-shrink-0" />
+                  <span className="text-gray-700">Environmental damage</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Scale className="h-6 w-6 text-wbuk-red flex-shrink-0" />
+                  <span className="text-gray-700">Financial misconduct</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Scale className="h-6 w-6 text-wbuk-red flex-shrink-0" />
+                  <span className="text-gray-700">Legal violations</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Scale className="h-6 w-6 text-wbuk-red flex-shrink-0" />
+                  <span className="text-gray-700">Cover-ups</span>
+                </div>
+              </div>
             </div>
-            <div 
-              className="h-80 lg:h-96 rounded-lg bg-cover bg-center"
-              style={{ 
-                backgroundImage: "url('https://images.unsplash.com/photo-1765375411306-9b19cb5797a3?crop=entropy&cs=srgb&fm=jpg&q=85')",
-              }}
-            />
+            <div className="bg-white p-8 shadow-lg">
+              <h3 className="font-heading font-bold text-xl mb-4 text-wbuk-red">Important Notice</h3>
+              <p className="text-gray-600 mb-4">
+                This AI service provides guidance, not legal advice. Any assessment is preliminary 
+                and subject to review by qualified advisors.
+              </p>
+              <p className="text-gray-600">
+                The final determination of whether a disclosure qualifies for protection is a 
+                legal matter that may ultimately be decided by an Employment Tribunal.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-slate-900">
+      <section className="py-16 md:py-24 bg-wbuk-red">
         <div className="max-w-7xl mx-auto px-4 md:px-8 text-center">
-          <h2 className="font-serif text-3xl md:text-4xl font-bold text-white mb-6">
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-white mb-6">
             Ready to Speak Up?
           </h2>
-          <p className="text-lg text-slate-300 mb-8 max-w-2xl mx-auto">
-            Your courage could protect others. Start your confidential triage today.
+          <p className="text-lg text-red-100 mb-8 max-w-2xl mx-auto">
+            Your courage could protect others. Start your confidential triage today. 
+            We're a not-for-profit organisation here to support you.
           </p>
           <Button 
             size="lg" 
-            className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-6 text-lg"
+            className="bg-white hover:bg-gray-100 text-wbuk-red rounded-none px-8 py-6 text-lg font-bold"
             onClick={handleStartChat}
             disabled={isLoading}
             data-testid="cta-start-chat-button"
@@ -236,24 +263,59 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 bg-slate-950 text-slate-400">
+      <footer className="py-12 bg-gray-900 text-gray-300">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-3">
-              <ShieldCheck className="h-6 w-6 text-teal-600" />
-              <span className="font-semibold text-white">WhistleblowersUK</span>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div className="md:col-span-2">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="flex flex-col leading-none">
+                  <span className="font-heading font-extrabold text-xl text-white">WB</span>
+                  <span className="font-heading font-extrabold text-xl text-white">UK</span>
+                </div>
+                <div>
+                  <span className="font-heading font-bold text-white">WhistleblowersUK</span>
+                </div>
+              </div>
+              <p className="text-gray-400 max-w-md">
+                We're a not-for-profit organisation dedicated to educating, supporting, and championing 
+                whistleblowers, working to build a fairer, more transparent society.
+              </p>
             </div>
-            <p className="text-sm">
-              © 2026 WhistleblowersUK. Registered number 09347927.
+            <div>
+              <h4 className="font-heading font-bold text-white mb-4">Quick Links</h4>
+              <ul className="space-y-2">
+                <li>
+                  <a href="https://wbuk.org" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                    Main Website
+                  </a>
+                </li>
+                <li>
+                  <a href="https://wbuk.org/services" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                    Our Services
+                  </a>
+                </li>
+                <li>
+                  <a href="https://wbuk.org/contact-us" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                    Contact Us
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-heading font-bold text-white mb-4">Contact</h4>
+              <div className="flex items-center gap-2 text-gray-400">
+                <Phone className="h-4 w-4" />
+                <span>Via WBUK website</span>
+              </div>
+            </div>
+          </div>
+          <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-gray-500">
+              © 2026 WhistleblowersUK. Registered charity number 09347927.
             </p>
-            <div className="flex gap-6 text-sm">
-              <a href="https://wbuk.org" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                About WBUK
-              </a>
-              <a href="https://wbuk.org/contact-us" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                Contact
-              </a>
-            </div>
+            <p className="text-sm text-gray-500">
+              AI Triage Service powered by WBUK
+            </p>
           </div>
         </div>
       </footer>

@@ -264,31 +264,35 @@ export default function AdminUsers() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-wbuk-red" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white shadow-sm">
+      <header className="sticky top-0 z-50 w-full bg-white border-b-4 border-wbuk-red">
         <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => navigate("/admin/dashboard")}
+              className="hover:bg-red-50"
               data-testid="back-to-dashboard"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div className="flex items-center gap-3">
-              <ShieldCheck className="h-6 w-6 text-teal-700" />
+              <div className="flex flex-col leading-none">
+                <span className="font-heading font-extrabold text-lg text-wbuk-red">WB</span>
+                <span className="font-heading font-extrabold text-lg text-wbuk-red">UK</span>
+              </div>
               <div>
-                <h1 className="font-serif font-bold text-slate-900">User Management</h1>
-                <p className="text-xs text-slate-500">Manage advisor accounts</p>
+                <h1 className="font-heading font-bold text-gray-900">User Management</h1>
+                <p className="text-xs text-gray-500">Manage advisor accounts</p>
               </div>
             </div>
           </div>
@@ -297,11 +301,11 @@ export default function AdminUsers() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-8">
-        <Card>
+        <Card className="rounded-none">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="font-serif flex items-center gap-2">
-                <Users className="h-5 w-5 text-teal-600" />
+              <CardTitle className="font-heading flex items-center gap-2 text-wbuk-red">
+                <Users className="h-5 w-5" />
                 Advisor Accounts
               </CardTitle>
               <CardDescription>
@@ -310,7 +314,7 @@ export default function AdminUsers() {
             </div>
             <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
               <DialogTrigger asChild>
-                <Button className="bg-teal-600 hover:bg-teal-700" data-testid="create-user-button">
+                <Button className="bg-wbuk-red hover:bg-red-700 rounded-none" data-testid="create-user-button">
                   <UserPlus className="h-4 w-4 mr-2" />
                   Add User
                 </Button>
@@ -371,13 +375,13 @@ export default function AdminUsers() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+                  <Button variant="outline" onClick={() => setShowCreateDialog(false)} className="rounded-none">
                     Cancel
                   </Button>
                   <Button 
                     onClick={handleCreateUser} 
                     disabled={isSubmitting}
-                    className="bg-teal-600 hover:bg-teal-700"
+                    className="bg-wbuk-red hover:bg-red-700 rounded-none"
                     data-testid="submit-create-user"
                   >
                     {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create User"}
@@ -389,8 +393,8 @@ export default function AdminUsers() {
           <CardContent>
             {users.length === 0 ? (
               <div className="text-center py-12">
-                <Users className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                <p className="text-slate-500">No users found</p>
+                <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">No users found</p>
               </div>
             ) : (
               <Table>
@@ -410,7 +414,7 @@ export default function AdminUsers() {
                       <TableCell>
                         <div>
                           <p className="font-medium">{user.name}</p>
-                          <p className="text-sm text-slate-500">{user.email_hash?.slice(0, 8)}...</p>
+                          <p className="text-sm text-gray-500">{user.email_hash?.slice(0, 8)}...</p>
                         </div>
                       </TableCell>
                       <TableCell>{getRoleBadge(user.role)}</TableCell>
@@ -427,10 +431,10 @@ export default function AdminUsers() {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm text-slate-500">
+                      <TableCell className="text-sm text-gray-500">
                         {formatDate(user.last_login)}
                       </TableCell>
-                      <TableCell className="text-sm text-slate-500">
+                      <TableCell className="text-sm text-gray-500">
                         {formatDate(user.created_at)}
                       </TableCell>
                       <TableCell className="text-right">
@@ -528,10 +532,10 @@ export default function AdminUsers() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+              <Button variant="outline" onClick={() => setShowEditDialog(false)} className="rounded-none">
                 Cancel
               </Button>
-              <Button onClick={handleUpdateUser} disabled={isSubmitting} className="bg-teal-600 hover:bg-teal-700">
+              <Button onClick={handleUpdateUser} disabled={isSubmitting} className="bg-wbuk-red hover:bg-red-700 rounded-none">
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Changes"}
               </Button>
             </DialogFooter>
@@ -560,10 +564,10 @@ export default function AdminUsers() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setShowPasswordDialog(false)}>
+              <Button variant="outline" onClick={() => setShowPasswordDialog(false)} className="rounded-none">
                 Cancel
               </Button>
-              <Button onClick={handleChangePassword} disabled={isSubmitting} className="bg-teal-600 hover:bg-teal-700">
+              <Button onClick={handleChangePassword} disabled={isSubmitting} className="bg-wbuk-red hover:bg-red-700 rounded-none">
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Reset Password"}
               </Button>
             </DialogFooter>

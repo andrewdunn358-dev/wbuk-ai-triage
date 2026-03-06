@@ -8,8 +8,8 @@ module.exports = {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Manrope', 'system-ui', 'sans-serif'],
-                serif: ['Merriweather', 'Georgia', 'serif'],
+                sans: ['Open Sans', 'system-ui', 'sans-serif'],
+                heading: ['Montserrat', 'sans-serif'],
             },
             borderRadius: {
                 lg: 'var(--radius)',
@@ -54,6 +54,10 @@ module.exports = {
                 warning: 'hsl(var(--warning))',
                 error: 'hsl(var(--error))',
                 info: 'hsl(var(--info))',
+                wbuk: {
+                    red: '#C41E3A',
+                    dark: '#1a1a1a',
+                },
                 chart: {
                     '1': 'hsl(var(--chart-1))',
                     '2': 'hsl(var(--chart-2))',
