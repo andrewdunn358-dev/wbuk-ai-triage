@@ -12,9 +12,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies (emergentintegrations needs special index)
-RUN pip install --no-cache-dir emergentintegrations --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
-RUN pip install --no-cache-dir -r requirements.txt
+# Install ALL Python dependencies with the extra index for emergentintegrations
+RUN pip install --no-cache-dir --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/ -r requirements.txt
 
 # Copy backend code
 COPY . .
