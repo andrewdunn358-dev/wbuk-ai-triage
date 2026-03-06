@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   mongodb:
     image: mongo:7
@@ -42,8 +40,8 @@ services:
 
   backend:
     build:
-      context: .
-      dockerfile: deploy/docker/backend.Dockerfile
+      context: ../backend
+      dockerfile: Dockerfile
     container_name: wbuk-backend
     restart: unless-stopped
     environment:
@@ -58,29 +56,21 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
-      minio:
-        condition: service_healthy
     volumes:
       - uploads_data:/app/uploads
     networks:
       - wbuk-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
   frontend:
     build:
-      context: .
-      dockerfile: deploy/docker/frontend.Dockerfile
+      context: ../frontend
+      dockerfile: Dockerfile
       args:
         REACT_APP_BACKEND_URL: ${PUBLIC_URL:-http://localhost}
     container_name: wbuk-frontend
     restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"
     depends_on:
       - backend
     networks:
