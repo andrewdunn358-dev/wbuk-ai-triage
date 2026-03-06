@@ -23,7 +23,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 INSTALL_DIR="/opt/wbuk-triage"
-REPO_URL="${WBUK_REPO_URL:-https://github.com/<YOUR_USERNAME>/wbuk-triage.git}"
+REPO_URL="${WBUK_REPO_URL:-https://github.com/andrewdunn358-dev/wbuk-ai-triage.git}"
 
 echo -e "${BLUE}"
 echo "╔═══════════════════════════════════════════════════════════════╗"
