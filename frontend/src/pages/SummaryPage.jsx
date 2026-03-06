@@ -14,10 +14,12 @@ import {
   MessageSquare,
   Send,
   Copy,
-  Scale
+  Scale,
+  Upload
 } from "lucide-react";
 import { generateSummary, submitCase, verifySession } from "@/lib/api";
 import { toast } from "sonner";
+import EvidenceUpload from "@/components/EvidenceUpload";
 
 export default function SummaryPage() {
   const navigate = useNavigate();
@@ -27,6 +29,8 @@ export default function SummaryPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [caseReference, setCaseReference] = useState(null);
+  const [showEvidenceUpload, setShowEvidenceUpload] = useState(false);
+  const [uploadedEvidence, setUploadedEvidence] = useState([]);
 
   useEffect(() => {
     const loadSummary = async () => {
@@ -369,6 +373,58 @@ export default function SummaryPage() {
                     <li className="text-slate-600">Continue conversation for recommendations</li>
                   )}
                 </ul>
+              </CardContent>
+            </Card>
+
+            {/* Evidence Upload Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-serif flex items-center gap-2">
+                  <Upload className="h-5 w-5 text-teal-600" />
+                  Supporting Evidence
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {!showEvidenceUpload ? (
+                  <div className="text-center py-6">
+                    <p className="text-slate-600 mb-4">
+                      Do you have documents, emails, or other evidence to support your disclosure?
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowEvidenceUpload(true)}
+                        data-testid="show-upload-button"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Evidence
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => {}}
+                        className="text-slate-500"
+                      >
+                        Skip for now
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <EvidenceUpload 
+                      sessionToken={sessionToken}
+                      onUploadComplete={(files) => {
+                        setUploadedEvidence(prev => [...prev, ...files]);
+                      }}
+                    />
+                    {uploadedEvidence.length > 0 && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm font-medium text-slate-700 mb-2">
+                          Uploaded: {uploadedEvidence.length} file(s)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
 

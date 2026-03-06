@@ -24,16 +24,23 @@ import {
   User,
   Send,
   Loader2,
-  Scale
+  Scale,
+  Download,
+  Paperclip,
+  File,
+  Image
 } from "lucide-react";
 import { getCaseDetail, updateCaseStatus, addCaseNote, getCurrentAdmin } from "@/lib/api";
 import { toast } from "sonner";
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function AdminCaseDetail() {
   const navigate = useNavigate();
   const { caseReference } = useParams();
   const [caseData, setCaseData] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [evidence, setEvidence] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newNote, setNewNote] = useState("");
   const [isAddingNote, setIsAddingNote] = useState(false);
@@ -52,6 +59,16 @@ export default function AdminCaseDetail() {
         const data = await getCaseDetail(caseReference);
         setCaseData(data.case);
         setMessages(data.messages);
+        
+        // Load evidence
+        const token = localStorage.getItem("adminToken");
+        const evidenceResponse = await fetch(`${API_URL}/api/admin/cases/${caseReference}/evidence`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (evidenceResponse.ok) {
+          const evidenceData = await evidenceResponse.json();
+          setEvidence(evidenceData.evidence || []);
+        }
       } catch (error) {
         console.error("Failed to load case:", error);
         if (error.response?.status === 401) {
@@ -349,6 +366,76 @@ export default function AdminCaseDetail() {
                       ))}
                     </ul>
                   </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Evidence */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-serif flex items-center gap-2">
+                  <Paperclip className="h-5 w-5 text-teal-600" />
+                  Evidence ({evidence.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {evidence.length === 0 ? (
+                  <p className="text-sm text-slate-500 text-center py-4">No evidence uploaded</p>
+                ) : (
+                  <div className="space-y-2">
+                    {evidence.map((file) => (
+                      <div 
+                        key={file.file_id}
+                        className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          {file.file_type?.match(/^(jpg|jpeg|png|gif)$/i) ? (
+                            <Image className="h-5 w-5 text-purple-500" />
+                          ) : file.file_type === 'pdf' ? (
+                            <FileText className="h-5 w-5 text-red-500" />
+                          ) : (
+                            <File className="h-5 w-5 text-blue-500" />
+                          )}
+                          <div>
+                            <p className="text-sm font-medium truncate max-w-[200px]">
+                              {file.original_filename}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {(file.file_size / 1024).toFixed(1)} KB • {file.file_type?.toUpperCase()}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={async () => {
+                            try {
+                              const token = localStorage.getItem("adminToken");
+                              const response = await fetch(`${API_URL}/api/admin/evidence/${file.file_id}/download`, {
+                                headers: { Authorization: `Bearer ${token}` }
+                              });
+                              if (!response.ok) throw new Error('Download failed');
+                              const blob = await response.blob();
+                              const url = window.URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = url;
+                              a.download = file.original_filename;
+                              document.body.appendChild(a);
+                              a.click();
+                              window.URL.revokeObjectURL(url);
+                              a.remove();
+                              toast.success('Download started');
+                            } catch (error) {
+                              toast.error('Failed to download file');
+                            }
+                          }}
+                          data-testid={`download-${file.file_id}`}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </CardContent>
             </Card>

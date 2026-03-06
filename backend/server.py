@@ -1,4 +1,5 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File, BackgroundTasks
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File, BackgroundTasks, Form
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -13,6 +14,8 @@ from datetime import datetime, timezone, timedelta
 import jwt
 import bcrypt
 import hashlib
+import aiofiles
+import io
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 from decision_engine import (
     ENHANCED_SYSTEM_PROMPT,
@@ -41,6 +44,14 @@ JWT_EXPIRATION_HOURS = 8
 
 # Emergent LLM Key
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY', '')
+
+# Evidence storage directory
+EVIDENCE_DIR = ROOT_DIR / "evidence_storage"
+EVIDENCE_DIR.mkdir(exist_ok=True)
+
+# Allowed file types for evidence
+ALLOWED_EXTENSIONS = {'.pdf', '.doc', '.docx', '.txt', '.jpg', '.jpeg', '.png', '.gif', '.xls', '.xlsx', '.csv', '.eml', '.msg'}
+MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB
 
 # Create the main app
 app = FastAPI(title="WBUK AI Triage API")
@@ -755,6 +766,242 @@ Return ONLY valid JSON."""
     )
     
     return result
+
+# =============================================================================
+# EVIDENCE UPLOAD ENDPOINTS
+# =============================================================================
+
+def strip_metadata(file_content: bytes, filename: str) -> bytes:
+    """Strip metadata from files for privacy protection"""
+    import subprocess
+    import tempfile
+    
+    ext = Path(filename).suffix.lower()
+    
+    # For images, try to strip EXIF data
+    if ext in ['.jpg', '.jpeg', '.png', '.gif']:
+        try:
+            from PIL import Image
+            img = Image.open(io.BytesIO(file_content))
+            # Create a new image without EXIF
+            data = list(img.getdata())
+            img_clean = Image.new(img.mode, img.size)
+            img_clean.putdata(data)
+            
+            output = io.BytesIO()
+            img_clean.save(output, format=img.format or 'PNG')
+            return output.getvalue()
+        except Exception as e:
+            logger.warning(f"Could not strip image metadata: {e}")
+            return file_content
+    
+    # For PDFs, try to strip metadata
+    elif ext == '.pdf':
+        try:
+            from PyPDF2 import PdfReader, PdfWriter
+            reader = PdfReader(io.BytesIO(file_content))
+            writer = PdfWriter()
+            
+            for page in reader.pages:
+                writer.add_page(page)
+            
+            # Remove metadata
+            writer.add_metadata({})
+            
+            output = io.BytesIO()
+            writer.write(output)
+            return output.getvalue()
+        except Exception as e:
+            logger.warning(f"Could not strip PDF metadata: {e}")
+            return file_content
+    
+    # For other files, return as-is (consider adding more handlers)
+    return file_content
+
+def get_secure_filename(filename: str) -> str:
+    """Generate a secure filename while preserving extension"""
+    ext = Path(filename).suffix.lower()
+    return f"{uuid.uuid4()}{ext}"
+
+@api_router.post("/evidence/upload")
+async def upload_evidence(
+    session_token: str = Form(...),
+    file: UploadFile = File(...)
+):
+    """Upload evidence file with metadata stripping"""
+    # Verify session
+    session = await db.sessions.find_one(
+        {"session_token": session_token},
+        {"_id": 0}
+    )
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Invalid session")
+    
+    # Check file extension
+    ext = Path(file.filename).suffix.lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"File type not allowed. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}"
+        )
+    
+    # Read file content
+    content = await file.read()
+    
+    # Check file size
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File too large. Maximum size is 50MB")
+    
+    # Strip metadata for privacy
+    stripped_content = strip_metadata(content, file.filename)
+    
+    # Generate secure filename
+    file_id = str(uuid.uuid4())
+    secure_filename = get_secure_filename(file.filename)
+    storage_path = EVIDENCE_DIR / secure_filename
+    
+    # Save file
+    async with aiofiles.open(storage_path, 'wb') as f:
+        await f.write(stripped_content)
+    
+    # Calculate checksum
+    checksum = hashlib.sha256(stripped_content).hexdigest()
+    
+    # Store metadata in database
+    evidence_doc = {
+        "file_id": file_id,
+        "session_id": session_token,
+        "case_id": None,  # Will be linked when case is submitted
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "original_filename": file.filename,
+        "secure_filename": secure_filename,
+        "storage_path": str(storage_path),
+        "file_type": ext[1:],  # Remove the dot
+        "mime_type": file.content_type,
+        "file_size": len(stripped_content),
+        "checksum": checksum,
+        "metadata_stripped": True,
+        "status": "uploaded",
+        "access_log": []
+    }
+    
+    await db.evidence.insert_one(evidence_doc)
+    
+    # Update session to track uploaded files
+    await db.sessions.update_one(
+        {"session_token": session_token},
+        {"$push": {"evidence_files": file_id}}
+    )
+    
+    await log_audit("anonymous_user", "evidence_uploaded", "evidence", file_id, 
+                   {"session_id": session_token, "file_type": ext})
+    
+    return {
+        "status": "uploaded",
+        "file_id": file_id,
+        "filename": file.filename,
+        "file_type": ext[1:],
+        "size": len(stripped_content),
+        "metadata_stripped": True
+    }
+
+@api_router.get("/evidence/list/{session_token}")
+async def list_evidence(session_token: str):
+    """List evidence files for a session"""
+    session = await db.sessions.find_one(
+        {"session_token": session_token},
+        {"_id": 0}
+    )
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    evidence = await db.evidence.find(
+        {"session_id": session_token, "status": "uploaded"},
+        {"_id": 0, "storage_path": 0}  # Don't expose storage path
+    ).to_list(100)
+    
+    return {"evidence": evidence, "count": len(evidence)}
+
+@api_router.delete("/evidence/{file_id}")
+async def delete_evidence(file_id: str, session_token: str):
+    """Delete an evidence file"""
+    evidence = await db.evidence.find_one({"file_id": file_id})
+    
+    if not evidence:
+        raise HTTPException(status_code=404, detail="Evidence not found")
+    
+    if evidence.get("session_id") != session_token:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    if evidence.get("case_id"):
+        raise HTTPException(status_code=400, detail="Cannot delete evidence after case submission")
+    
+    # Delete file from storage
+    try:
+        storage_path = Path(evidence.get("storage_path", ""))
+        if storage_path.exists():
+            storage_path.unlink()
+    except Exception as e:
+        logger.error(f"Error deleting file: {e}")
+    
+    # Update database
+    await db.evidence.update_one(
+        {"file_id": file_id},
+        {"$set": {"status": "deleted", "deleted_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    await log_audit("anonymous_user", "evidence_deleted", "evidence", file_id)
+    
+    return {"status": "deleted", "file_id": file_id}
+
+@api_router.get("/admin/evidence/{file_id}/download")
+async def download_evidence(file_id: str, admin: dict = Depends(get_current_admin)):
+    """Download evidence file (admin only)"""
+    evidence = await db.evidence.find_one({"file_id": file_id})
+    
+    if not evidence:
+        raise HTTPException(status_code=404, detail="Evidence not found")
+    
+    storage_path = Path(evidence.get("storage_path", ""))
+    if not storage_path.exists():
+        raise HTTPException(status_code=404, detail="File not found on storage")
+    
+    # Log access
+    await db.evidence.update_one(
+        {"file_id": file_id},
+        {"$push": {
+            "access_log": {
+                "accessed_by": admin["user_id"],
+                "accessed_at": datetime.now(timezone.utc).isoformat(),
+                "action": "download"
+            }
+        }}
+    )
+    
+    await log_audit("admin", "evidence_download", "evidence", file_id, user_id=admin["user_id"])
+    
+    return FileResponse(
+        path=storage_path,
+        filename=evidence.get("original_filename", "evidence"),
+        media_type=evidence.get("mime_type", "application/octet-stream")
+    )
+
+@api_router.get("/admin/cases/{case_reference}/evidence")
+async def get_case_evidence(case_reference: str, admin: dict = Depends(get_current_admin)):
+    """Get all evidence for a case"""
+    case = await db.cases.find_one({"case_reference": case_reference})
+    
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    
+    evidence = await db.evidence.find(
+        {"session_id": case["session_id"], "status": "uploaded"},
+        {"_id": 0, "storage_path": 0}
+    ).to_list(100)
+    
+    return {"evidence": evidence, "count": len(evidence)}
 
 # =============================================================================
 # ADMIN AUTH ENDPOINTS
