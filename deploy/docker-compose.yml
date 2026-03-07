@@ -4,8 +4,8 @@ services:
     container_name: wbuk-mongodb
     restart: unless-stopped
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-wbukadmin}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-changeme}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
       MONGO_INITDB_DATABASE: wbuk_triage
     volumes:
       - mongodb_data:/data/db
@@ -22,8 +22,8 @@ services:
     container_name: wbuk-minio
     restart: unless-stopped
     environment:
-      MINIO_ROOT_USER: ${MINIO_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-minioadmin123}
+      MINIO_ROOT_USER: ${MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
@@ -32,11 +32,6 @@ services:
       - "9001:9001"
     networks:
       - wbuk-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
 
   backend:
     build:
@@ -45,19 +40,13 @@ services:
     container_name: wbuk-backend
     restart: unless-stopped
     environment:
-      MONGO_URL: mongodb://${MONGO_USER:-wbukadmin}:${MONGO_PASSWORD:-changeme}@mongodb:27017/wbuk_triage?authSource=admin
+      MONGO_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/wbuk_triage?authSource=admin
       DB_NAME: wbuk_triage
       EMERGENT_LLM_KEY: ${EMERGENT_LLM_KEY}
-      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_USER:-minioadmin}
-      MINIO_SECRET_KEY: ${MINIO_PASSWORD:-minioadmin123}
-      MINIO_BUCKET: wbuk-evidence
+      JWT_SECRET: ${JWT_SECRET}
     depends_on:
       mongodb:
         condition: service_healthy
-    volumes:
-      - uploads_data:/app/uploads
     networks:
       - wbuk-network
 
@@ -66,7 +55,7 @@ services:
       context: ../frontend
       dockerfile: Dockerfile
       args:
-        REACT_APP_BACKEND_URL: ${PUBLIC_URL:-http://localhost}
+        REACT_APP_BACKEND_URL: ${PUBLIC_URL}
     container_name: wbuk-frontend
     restart: unless-stopped
     ports:
@@ -78,11 +67,7 @@ services:
 
 volumes:
   mongodb_data:
-    driver: local
   minio_data:
-    driver: local
-  uploads_data:
-    driver: local
 
 networks:
   wbuk-network:
