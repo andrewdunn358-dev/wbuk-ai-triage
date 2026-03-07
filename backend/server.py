@@ -16,7 +16,10 @@ import bcrypt
 import hashlib
 import aiofiles
 import io
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+
+# AI Provider - supports multiple backends
+from ai_provider import get_ai_response, get_provider_info
+
 from decision_engine import (
     ENHANCED_SYSTEM_PROMPT,
     calculate_protection_score,
@@ -42,8 +45,9 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'wbuk-secret-key-change-in-production'
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 8
 
-# Emergent LLM Key
-EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY', '')
+# AI Configuration
+AI_PROVIDER = os.environ.get('AI_PROVIDER', 'emergent')
+AI_API_KEY = os.environ.get('AI_API_KEY', os.environ.get('EMERGENT_LLM_KEY', ''))
 
 # Evidence storage directory
 EVIDENCE_DIR = ROOT_DIR / "evidence_storage"
@@ -287,20 +291,9 @@ async def send_message(data: MessageCreate):
             "content": msg["content"]
         })
     
-    # Get AI response
+    # Get AI response using configured provider
     try:
-        chat = LlmChat(
-            api_key=EMERGENT_LLM_KEY,
-            session_id=data.session_token,
-            system_message=SYSTEM_PROMPT
-        ).with_model("openai", "gpt-5.2")
-        
-        # Build context from history
-        context = "\n".join([f"{m['role']}: {m['content']}" for m in messages_for_ai[:-1]]) if len(messages_for_ai) > 1 else ""
-        full_message = f"Previous conversation:\n{context}\n\nUser's latest message: {data.content}" if context else data.content
-        
-        user_msg = UserMessage(text=full_message)
-        ai_response = await chat.send_message(user_msg)
+        ai_response = await get_ai_response(messages_for_ai, SYSTEM_PROMPT)
         
     except Exception as e:
         logger.error(f"AI Error: {str(e)}")
@@ -467,14 +460,11 @@ Generate a JSON response with this exact structure:
 Respond ONLY with valid JSON, no other text."""
 
     try:
-        chat = LlmChat(
-            api_key=EMERGENT_LLM_KEY,
-            session_id=f"{session_token}-summary",
-            system_message="You are a legal analysis assistant. Respond only with valid JSON."
-        ).with_model("openai", "gpt-5.2")
-        
-        user_msg = UserMessage(text=summary_prompt)
-        ai_response = await chat.send_message(user_msg)
+        summary_messages = [{"role": "user", "content": summary_prompt}]
+        ai_response = await get_ai_response(
+            summary_messages, 
+            "You are a legal analysis assistant for a whistleblowing charity. Respond only with valid JSON."
+        )
         
         # Parse JSON response
         import json
@@ -657,14 +647,11 @@ Extract and return ONLY this JSON structure (use null for unknown values):
 Return ONLY valid JSON."""
 
     try:
-        chat = LlmChat(
-            api_key=EMERGENT_LLM_KEY,
-            session_id=f"{session_token}-scoring",
-            system_message="Extract data from conversations. Return only valid JSON."
-        ).with_model("openai", "gpt-5.2")
-        
-        user_msg = UserMessage(text=extraction_prompt)
-        ai_response = await chat.send_message(user_msg)
+        scoring_messages = [{"role": "user", "content": extraction_prompt}]
+        ai_response = await get_ai_response(
+            scoring_messages,
+            "Extract data from conversations. Return only valid JSON."
+        )
         
         # Parse JSON
         import json

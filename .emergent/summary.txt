@@ -1,0 +1,194 @@
+<analysis>**original_problem_statement:**
+The user wants to build a secure, AI-powered whistleblower triage platform for Whistleblower UK (WBUK.org). The platform must allow anonymous reporting, use an AI to assess disclosures against UK law (PIDA 1998), assess risk, and generate a structured case summary for advisors.
+
+Subsequent user requests have expanded the scope to include: a complete UI overhaul to match WBUK branding, a one-liner installation script for a fresh VPS, SSL integration, a site-wide password gate, robust AI safeguarding protocols, and the ability to select from multiple AI providers (OpenAI, Anthropic, Gemini, Ollama) during installation.
+
+**PRODUCT REQUIREMENTS:**
+- Anonymous, session-based chat interface for triage.
+- AI-driven question flow, risk assessment, legal classification, and case summary generation.
+- Secure admin dashboard for WBUK advisors to view reports, evidence, and manage cases.
+- Full admin user management.
+- Evidence upload with metadata stripping and secure, scalable storage (S3/MinIO).
+- A fully automated, interactive installation script for Ubuntu 24.04.
+
+**User's preferred language**: English
+
+**what currently exists?**
+A full-stack application using React, FastAPI, and MongoDB has been built and deployed to the user's VPS.
+- The core application (anonymous chat, AI engine, admin dashboard) is functional.
+- The UI has been completely redesigned to match the WBUK brand identity.
+- A deployment system using Docker Compose, Nginx (with SSL), and an installation script () is in place and has been extensively debugged on the user's server.
+- A password gate () protects the site.
+- The AI's conversational prompts have been heavily refined for a more supportive, less legalistic tone.
+- Safeguarding triggers have been added to the AI to detect and respond to users in immediate distress.
+- The backend is in the middle of a major refactoring to support multiple AI providers (Emergent, OpenAI, Anthropic, Gemini, Ollama).
+
+**Last working item**:
+- **Last item agent was working:** The agent was in the middle of a major backend refactoring to allow selecting different AI providers via an environment variable. This involved creating an adapter pattern () and specific provider implementations, and then updating  and  to use this new system.
+- **Status:** IN PROGRESS
+- **Agent Testing Done:** N
+- **Which testing method agent to use?** Backend testing agent. Once the refactoring is complete, the agent must test the chat functionality by setting the  environment variable to each supported option (e.g., usage: openai [-h] [-v] [-b API_BASE] [-k API_KEY] [-p PROXY [PROXY ...]]
+              [-o ORGANIZATION] [-t {openai,azure}]
+              [--api-version API_VERSION] [--azure-endpoint AZURE_ENDPOINT]
+              [--azure-ad-token AZURE_AD_TOKEN] [-V]
+              {api,tools,migrate,grit} ...
+
+positional arguments:
+  {api,tools,migrate,grit}
+    api                 Direct API calls
+    tools               Client side tools for convenience
+
+options:
+  -h, --help            show this help message and exit
+  -v, --verbose         Set verbosity.
+  -b API_BASE, --api-base API_BASE
+                        What API base url to use.
+  -k API_KEY, --api-key API_KEY
+                        What API key to use.
+  -p PROXY [PROXY ...], --proxy PROXY [PROXY ...]
+                        What proxy to use.
+  -o ORGANIZATION, --organization ORGANIZATION
+                        Which organization to run as (will use your default
+                        organization if not specified)
+  -t {openai,azure}, --api-type {openai,azure}
+                        The backend API to call, must be `openai` or `azure`
+  --api-version API_VERSION
+                        The Azure API version, e.g.
+                        'https://learn.microsoft.com/en-us/azure/ai-
+                        services/openai/reference#rest-api-versioning'
+  --azure-endpoint AZURE_ENDPOINT
+                        The Azure endpoint, e.g.
+                        'https://endpoint.openai.azure.com'
+  --azure-ad-token AZURE_AD_TOKEN
+                        A token from Azure Active Directory,
+                        https://www.microsoft.com/en-
+                        us/security/business/identity-access/microsoft-entra-
+                        id
+  -V, --version         show program's version number and exit, ) and providing the relevant API keys to ensure all paths work correctly.
+- **User Testing Done:** N
+
+**All Pending/In progress Issue list**:
+There are no outstanding bugs. The current focus is on new feature development.
+
+**In progress Task List**:
+- **Task 1:** Complete Multi-AI Provider Backend Refactoring
+  - **Priority:** P0 - HIGHEST
+  - **Where to resume:** The agent has created the new files in  and partially updated  and . The task is to find and replace all remaining hardcoded LLM calls with the new  adapter logic.
+  - **What will be achieved with this?** The backend will be ableto dynamically switch between different LLM providers, a prerequisite for the interactive installer.
+  - **Status:** IN PROGRESS
+  - **Should Test frontend/backend/both after fix?** Backend
+  - **Blocked on something:** None
+
+**Upcoming and Future Tasks**
+- **Upcoming Tasks:**
+  - **P0: Create Interactive Installation Wizard:** This is the user's top priority. The existing  must be enhanced to become a wizard that interactively prompts the user for:
+    - Domain name (for  and SSL)
+    - Admin user email and password
+    - **Choice of AI Provider** and the corresponding API key.
+    The script should then fully automate the setup, including  creation, SSL, Docker builds, and admin user creation.
+  - **P1: Implement Secure, Scalable File Storage (MinIO/S3):** The current file upload feature saves files to a non-persistent local directory. This is a critical production vulnerability. The logic in  must be refactored to use the already-deployed MinIO service for object storage.
+  - **P2: Implement Email Notifications:** Integrate an email service (e.g., SendGrid, Resend) to send alerts to advisors when new cases are submitted, as requested by the user.
+
+- **Future Tasks:**
+  - Allow advisors to take ownership of cases.
+  - Enhance the admin case search functionality.
+  - Implement a secure advisor-whistleblower messaging system.
+
+**Completed work in this session**
+- **Full UI Redesign:** Applied the WBUK brand (white/red theme) consistently across the entire application, including all admin pages.
+- **Automated Deployment:** Created and debugged a comprehensive deployment system using Docker Compose, Nginx, and an  script. Resolved numerous Docker, Nginx, build, and environment variable issues on the user's live VPS.
+- **SSL/HTTPS Enabled:** Successfully guided the user through obtaining a Let's Encrypt certificate and configured Nginx and Docker Compose to serve the site over HTTPS.
+- **Admin Login Fixed:** Diagnosed and fixed a persistent admin login issue caused by incorrect database schema ( vs ) and credential mismatches.
+- **AI Prompt Overhaul:** Rewrote the AI's system prompts based on extensive user feedback to shift the persona from a legal analyst to a supportive intake officer.
+- **Safeguarding Protocol:** Implemented robust safeguarding logic to detect keywords related to self-harm, child protection, and immediate danger, and provide appropriate emergency resources.
+- **Site Password Gate:** Added a password wall () to protect the entire application from public access.
+- **Documentation:** Created a  and updated the .
+
+**Earlier issues found/mentioned but not fixed**
+- **Secure File Storage (S3/MinIO):** This was a requirement from the user's initial document () and is a critical feature for a production environment. It has been repeatedly deferred. The current local storage is not scalable or secure.
+
+**Known issue recurrence from previous fork**
+- N/A
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+- **Backend:** FastAPI, MongoDB, Pydantic, JWT
+- **Frontend:** React, Tailwind CSS, Shadcn/UI
+- **AI:**  (current), with a new **Adapter Pattern** being built to support direct OpenAI, Anthropic, Gemini, and local Ollama integrations.
+- **Deployment:** Docker, Docker Compose, Nginx (as a reverse proxy with SSL), Certbot (Let's Encrypt), Bash scripting.
+
+**key DB schema**
+- **admin_users:**  (Note: The schema was stabilized to use  after significant debugging).
+
+**changes in tech stack**
+- The backend is being refactored to support multiple LLM providers (OpenAI, Anthropic, Gemini, Ollama) in addition to the existing  library.
+
+**All files of reference**
+- : Directory containing the new multi-AI provider logic.
+-  & : Core files being refactored.
+- : The installation script that needs to be made interactive.
+- : Defines all services, ports, volumes, and build arguments.
+- : Nginx config for proxying and SSL.
+- : New file for the site password.
+- : New documentation file.
+
+**Areas that need refactoring**:
+- **:** The evidence upload endpoints need to be refactored from local file storage to use the MinIO S3-compatible service.
+- ** & :** The multi-AI provider refactoring needs to be completed.
+
+**key api endpoints**
+- : The admin login endpoint that was extensively debugged and is now working.
+- : The core chat endpoint that is currently being refactored to support multiple AI providers.
+
+**Critical Info for New Agent**
+- The user is hands-on and works on a live Ubuntu VPS. Your primary role is to provide code and the exact shell commands needed for deployment and debugging.
+- **Communication is key:** Explicitly state whether a fix requires a **Save to GitHub + rebuild** or is just a **Run on server** command. The user has requested this.
+- **Priorities:**
+  1. Finish the multi-AI provider backend refactoring.
+  2. Build the interactive installation wizard. This is what the user is waiting for to test on a blank VPS.
+  3. Implement the secure file storage using MinIO.
+- Admin credentials have been a point of failure. The goal is to make them configurable via the interactive installer. The last known working static credentials were  / .
+
+**documents and test reports created in this job**
+- 
+-  (renamed from root )
+
+**Last 10 User Messages and any pending HUMAN messages**
+1. **User:** Wants the page tab title changed. (DONE)
+2. **User:** Provides extensive, detailed feedback on making the AI more conversational and less legalistic. (DONE)
+3. **User:** Provides a second round of detailed feedback on the AI's post-triage behavior and response structure. (DONE)
+4. **User:** Points out the AI needs to ask for location/organization info for the advisor report. (DONE)
+5. **User:** Confirms they want safeguarding features implemented now, and email notifications later. (DONE)
+6. **User:** Requests a password wall to protect the site from accidental visitors. (DONE)
+7. **User:** Asks if the installation script can be made interactive to prompt for domain, admin creds, and SSL setup. (PENDING)
+8. **User:** Suggests adding a choice of different AI providers (OpenAI, Claude, Ollama, etc.) to the interactive installer. (IN PROGRESS)
+9. **User:** Confirms to proceed with the multi-AI refactoring and says yes I will test later today on a blank vps.
+10. **User:** Asks for a user manual and a full description of the app's features to be added to GitHub. (DONE)
+
+**Project Health Check:**
+- **Broken:** The backend is in a non-functional state mid-refactoring. The AI chat will not work until the multi-provider integration is complete.
+- **Mocked:**
+  - **Evidence Storage:** The application uses local, non-persistent file storage. MinIO is deployed via Docker Compose but is not yet integrated into the  logic.
+
+**3rd Party Integrations**
+- **OpenAI GPT-5.2** — via .
+- **Planned:** Direct integration with OpenAI, Anthropic, Google Gemini, and a local **Ollama** instance.
+- **Database:** MongoDB
+- **File Storage:** MinIO (deployed, not integrated)
+- **Deployment:** Docker, Docker Compose, Nginx, Let's Encrypt.
+
+**Testing status**
+- **Testing agent used after significant changes:** NO (not since the latest major changes).
+- **Troubleshoot agent used after agent stuck in loop:** NO
+- **Test files created:** None in this session.
+- **Known regressions:** The entire backend chat functionality is currently broken due to the ongoing refactor.
+
+**Credentials to test flow:**
+- **Site Password:** 
+- **Admin Login:** The new interactive installer should make this configurable. The last hardcoded working credentials were  / .
+
+**What agent forgot to execute**
+- The agent has not yet implemented the critical requirement for secure, S3-compatible file storage (MinIO), which was part of the original problem statement.
+- The user's last message indicated they are waiting for the interactive installer to test on a new VPS. The agent started the backend refactoring first, which is a prerequisite, but the ultimate goal for the user is the new installer.</analysis>
