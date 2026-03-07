@@ -1,336 +1,263 @@
-# WBUK AI Triage - VPS Deployment Instructions
+# WBUK AI Triage Platform - VPS Deployment Instructions
 
 ## Requirements
-- Ubuntu 22.04 LTS VPS (minimum 4GB RAM, 2 vCPUs)
-- Domain name pointing to VPS IP
-- SSH access
+- **Ubuntu 24.04 LTS** (fresh install recommended)
+- **Minimum specs:** 2 CPU, 4GB RAM, 20GB storage
+- **Root/sudo access**
+- **Domain name** (optional but recommended for SSL)
 
 ---
 
-## Step 1: Initial Server Setup
+## Option 1: Interactive Installation Wizard (Recommended)
+
+Run this single command as root:
 
 ```bash
-# Update system
-sudo apt update && sudo apt upgrade -y
+curl -sSL https://raw.githubusercontent.com/andrewdunn358-dev/wbuk-ai-triage/main/deploy/install-wizard.sh | sudo bash
+```
 
-# Install essentials
-sudo apt install -y curl wget git ufw fail2ban
+### The wizard will ask you for:
 
-# Create deploy user (optional)
-sudo adduser wbuk
-sudo usermod -aG sudo wbuk
+1. **Domain or IP address**
+   - Enter your domain (e.g., `whistleblower.example.com`)
+   - Or just press Enter to use your server's IP
+
+2. **SSL Certificate** (if using a domain)
+   - Choose Yes to set up HTTPS with Let's Encrypt
+   - Your domain must already point to the server's IP
+
+3. **Admin Account**
+   - Name (e.g., `Anthony`)
+   - Email (e.g., `anthony@wbuk.org`)
+   - Password (minimum 8 characters)
+
+4. **AI Provider** - Choose one:
+   | Option | Provider | Notes |
+   |--------|----------|-------|
+   | 1 | Emergent Universal Key | Recommended - access to GPT-5.2, Claude, Gemini |
+   | 2 | OpenAI Direct | Requires OpenAI API key |
+   | 3 | Anthropic Claude | Requires Anthropic API key |
+   | 4 | Google Gemini | Requires Google AI API key |
+   | 5 | Ollama (Local) | Free, runs on server, needs 8GB+ RAM |
+
+5. **Site Access Password**
+   - Password to protect the site from casual visitors
+   - Default: `WBUK2026`
+
+### After installation completes:
+
+Your credentials will be saved to:
+```
+/opt/wbuk-triage/CREDENTIALS.txt
+```
+
+**IMPORTANT:** Note down the credentials and delete this file for security!
+
+---
+
+## Option 2: Manual Installation
+
+```bash
+# 1. Install Docker (if not already installed)
+curl -fsSL https://get.docker.com | sudo sh
+
+# 2. Clone the repository
+sudo git clone https://github.com/andrewdunn358-dev/wbuk-ai-triage.git /opt/wbuk-triage
+
+# 3. Navigate to deploy folder
+cd /opt/wbuk-triage/deploy
+
+# 4. Copy and edit the environment file
+sudo cp .env.template .env
+sudo nano .env
+
+# 5. Build and start
+sudo docker compose up -d --build
+```
+
+### Environment Variables (.env file)
+
+```env
+PUBLIC_URL=https://your-domain.com
+MONGO_USER=wbukadmin
+MONGO_PASSWORD=your-secure-password
+MINIO_USER=minioadmin
+MINIO_PASSWORD=your-secure-password
+JWT_SECRET=your-32-char-secret-key
+AI_PROVIDER=emergent
+AI_API_KEY=your-api-key
+EMERGENT_LLM_KEY=your-emergent-key
+SITE_PASSWORD=WBUK2026
 ```
 
 ---
 
-## Step 2: Install Docker
+## Accessing the Platform
+
+| What | URL |
+|------|-----|
+| Main Site | `https://your-domain.com` |
+| Admin Dashboard | `https://your-domain.com/admin` |
+| MinIO Console | `https://your-domain.com:9001` |
+
+### First Login:
+1. Go to the main site
+2. Enter the **Site Access Password** (default: `WBUK2026`)
+3. For admin access, go to `/admin` and use your admin credentials
+
+---
+
+## Useful Commands
 
 ```bash
-# Install Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
+# Navigate to the deploy folder first
+cd /opt/wbuk-triage/deploy
 
-# Add user to docker group
-sudo usermod -aG docker $USER
+# Check status of all services
+docker ps
 
-# Install Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
+# View live logs
+docker compose logs -f
 
-# Verify
-docker --version
-docker-compose --version
+# View backend logs only
+docker compose logs -f backend
+
+# Restart all services
+docker compose restart
+
+# Restart just the backend
+docker compose restart backend
+
+# Stop everything
+docker compose down
+
+# Start everything
+docker compose up -d
+
+# Rebuild after code changes
+docker compose up -d --build
 ```
 
 ---
 
-## Step 3: Configure Firewall
+## SSL Certificate Setup (If Not Done During Install)
 
 ```bash
-sudo ufw default deny incoming
-sudo ufw default allow outgoing
-sudo ufw allow ssh
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
+# Install certbot
+sudo apt install certbot -y
+
+# Get certificate (stop services first)
+cd /opt/wbuk-triage/deploy
+docker compose down
+sudo certbot certonly --standalone -d your-domain.com
+
+# Update .env to use https
+sudo nano .env
+# Change: PUBLIC_URL=https://your-domain.com
+
+# Restart services
+docker compose up -d
+```
+
+---
+
+## Troubleshooting
+
+### Services not starting?
+```bash
+# Check Docker logs
+docker compose logs
+
+# Check if ports are in use
+sudo lsof -i :80
+sudo lsof -i :443
+```
+
+### Database connection issues?
+```bash
+# Check MongoDB is running
+docker ps | grep mongodb
+
+# View MongoDB logs
+docker compose logs mongodb
+```
+
+### AI not responding?
+```bash
+# Check backend logs for API errors
+docker compose logs backend | grep -i error
+
+# Verify API key is set
+docker compose exec backend env | grep AI
+```
+
+### Need to reset admin password?
+```bash
+# Connect to the backend container and run Python
+docker compose exec backend python3 << 'EOF'
+import asyncio
+from motor.motor_asyncio import AsyncIOMotorClient
+import bcrypt
+import hashlib
+import os
+
+async def reset_admin():
+    client = AsyncIOMotorClient(os.environ['MONGO_URL'])
+    db = client['wbuk_triage']
+    
+    new_password = "NewPassword123!"  # Change this
+    email = "your-admin@email.com"    # Change this
+    
+    email_hash = hashlib.sha256(email.lower().encode()).hexdigest()
+    password_hash = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
+    
+    await db.admin_users.update_one(
+        {"email_hash": email_hash},
+        {"$set": {"password_hash": password_hash}}
+    )
+    print(f"Password reset for {email}")
+
+asyncio.run(reset_admin())
+EOF
+```
+
+---
+
+## Firewall Configuration
+
+The installer automatically configures UFW, but if needed:
+
+```bash
+sudo ufw allow 22    # SSH
+sudo ufw allow 80    # HTTP
+sudo ufw allow 443   # HTTPS
+sudo ufw allow 9001  # MinIO Console (optional)
 sudo ufw enable
 ```
 
 ---
 
-## Step 4: Clone Repository
+## Backup
 
+### Database backup:
 ```bash
-# Clone from your GitHub
-git clone https://github.com/andrewdunn358-dev/wbuk-ai-triage.git
-cd wbuk-ai-triage
+docker compose exec mongodb mongodump --out /data/backup
+docker cp wbuk-mongodb:/data/backup ./mongodb-backup-$(date +%Y%m%d)
 ```
 
----
-
-## Step 5: Configure Environment Variables
-
-### Backend (.env)
-Create `/app/backend/.env`:
+### Full backup:
 ```bash
-MONGO_URL="mongodb://mongodb:27017"
-DB_NAME="wbuk_triage"
-CORS_ORIGINS="https://yourdomain.com"
-EMERGENT_LLM_KEY=sk-emergent-dD2650e666225B99f9
-JWT_SECRET=your-secure-random-secret-here-change-this
+sudo tar -czvf wbuk-backup-$(date +%Y%m%d).tar.gz /opt/wbuk-triage
 ```
-
-### Frontend (.env)
-Create `/app/frontend/.env`:
-```bash
-REACT_APP_BACKEND_URL=https://yourdomain.com
-```
-
----
-
-## Step 6: Create Docker Compose File
-
-Create `docker-compose.yml`:
-```yaml
-version: '3.8'
-
-services:
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./certbot/conf:/etc/letsencrypt:ro
-      - ./certbot/www:/var/www/certbot:ro
-    depends_on:
-      - frontend
-      - backend
-    restart: unless-stopped
-
-  frontend:
-    build: ./frontend
-    expose:
-      - "3000"
-    environment:
-      - NODE_ENV=production
-    restart: unless-stopped
-
-  backend:
-    build: ./backend
-    expose:
-      - "8001"
-    environment:
-      - MONGO_URL=mongodb://mongodb:27017
-      - DB_NAME=wbuk_triage
-    env_file:
-      - ./backend/.env
-    depends_on:
-      - mongodb
-    restart: unless-stopped
-
-  mongodb:
-    image: mongo:7.0
-    volumes:
-      - mongodb_data:/data/db
-    restart: unless-stopped
-
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-
-volumes:
-  mongodb_data:
-```
-
----
-
-## Step 7: Create Dockerfiles
-
-### Backend Dockerfile (`backend/Dockerfile`)
-```dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-EXPOSE 8001
-
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8001"]
-```
-
-### Frontend Dockerfile (`frontend/Dockerfile`)
-```dockerfile
-FROM node:20-alpine as build
-
-WORKDIR /app
-
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
-
-COPY . .
-RUN yarn build
-
-FROM nginx:alpine
-COPY --from=build /app/build /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-EXPOSE 3000
-
-CMD ["nginx", "-g", "daemon off;"]
-```
-
----
-
-## Step 8: NGINX Configuration
-
-Create `nginx/nginx.conf`:
-```nginx
-events {
-    worker_connections 1024;
-}
-
-http {
-    include /etc/nginx/mime.types;
-    
-    upstream frontend {
-        server frontend:3000;
-    }
-    
-    upstream backend {
-        server backend:8001;
-    }
-    
-    server {
-        listen 80;
-        server_name yourdomain.com;
-        
-        location /.well-known/acme-challenge/ {
-            root /var/www/certbot;
-        }
-        
-        location / {
-            return 301 https://$server_name$request_uri;
-        }
-    }
-    
-    server {
-        listen 443 ssl;
-        server_name yourdomain.com;
-        
-        ssl_certificate /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
-        ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
-        
-        # Security headers
-        add_header X-Frame-Options "SAMEORIGIN" always;
-        add_header X-Content-Type-Options "nosniff" always;
-        add_header X-XSS-Protection "1; mode=block" always;
-        
-        location /api/ {
-            proxy_pass http://backend/api/;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_read_timeout 120s;
-        }
-        
-        location / {
-            proxy_pass http://frontend;
-            proxy_set_header Host $host;
-        }
-    }
-}
-```
-
----
-
-## Step 9: SSL Certificate Setup
-
-```bash
-# Create directories
-mkdir -p certbot/conf certbot/www
-
-# Get initial certificate (replace with your domain)
-docker-compose run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d yourdomain.com
-```
-
----
-
-## Step 10: Deploy
-
-```bash
-# Build and start
-docker-compose build
-docker-compose up -d
-
-# Check logs
-docker-compose logs -f
-
-# Check status
-docker-compose ps
-```
-
----
-
-## Step 11: Verify Deployment
-
-1. Visit `https://yourdomain.com` - Landing page should load
-2. Click "Start Confidential Chat" - Chat should work
-3. Visit `https://yourdomain.com/admin` - Admin login should work
-
----
-
-## Maintenance Commands
-
-```bash
-# Restart services
-docker-compose restart
-
-# View logs
-docker-compose logs -f backend
-docker-compose logs -f frontend
-
-# Update deployment
-git pull
-docker-compose build
-docker-compose up -d
-
-# Backup MongoDB
-docker exec -it wbuk-mongodb mongodump --out /backup
-
-# Renew SSL (auto via certbot)
-docker-compose run --rm certbot renew
-```
-
----
-
-## Admin Credentials
-
-Initial admin account:
-- Email: `andyd358@hotmail.com`
-- Password: `WBUKAdmin2026!`
-
-**IMPORTANT:** Change this password after first login!
-
----
-
-## Security Checklist
-
-- [ ] Change JWT_SECRET to a secure random value
-- [ ] Change admin password
-- [ ] Configure firewall (UFW)
-- [ ] Enable fail2ban
-- [ ] Set up SSL certificate auto-renewal
-- [ ] Configure backup schedule
-- [ ] Review CORS settings
 
 ---
 
 ## Support
 
-For issues, contact WBUK technical team or refer to the comprehensive recommendations document: `WBUK_AI_TRIAGE_RECOMMENDATIONS.md`
+For issues or questions:
+- Check the logs first: `docker compose logs -f`
+- GitHub Issues: https://github.com/andrewdunn358-dev/wbuk-ai-triage/issues
+
+---
+
+**Last Updated:** March 2026
