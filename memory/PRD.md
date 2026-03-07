@@ -157,7 +157,18 @@ SITE_PASSWORD=WBUK2026
 ```
 
 ## Next Tasks
-1. Integrate MinIO for evidence storage (replace local uploads)
+1. Integrate MinIO for evidence storage (replace local uploads) - **PRIORITY**
 2. Test Docker deployment on fresh Ubuntu 24.04 VM
 3. Implement email notifications (SendGrid/Resend)
 4. Add MFA for admin users
+
+## Testing Status (March 2026)
+- ✅ Backend: 20/20 tests passing
+- ✅ Frontend: All UI flows working
+- ✅ AI Integration: GPT-5.2 via Emergent working
+- ✅ Admin Dashboard: Fully functional
+- ✅ Password Gate: Working
+
+## Active Test Cases
+- WBUK-2026-4F84DFF0 (Healthcare - patient records)
+- WBUK-2026-36A2A534 (Government - procurement fraud)
