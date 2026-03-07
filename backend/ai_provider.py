@@ -3,10 +3,17 @@
 
 import os
 import httpx
-from typing import AsyncGenerator
+import uuid
 
-AI_PROVIDER = os.environ.get("AI_PROVIDER", "emergent")
-AI_API_KEY = os.environ.get("AI_API_KEY", os.environ.get("EMERGENT_LLM_KEY", ""))
+
+def get_ai_provider():
+    """Get the configured AI provider"""
+    return os.environ.get("AI_PROVIDER", "emergent")
+
+
+def get_ai_api_key():
+    """Get the configured API key at runtime"""
+    return os.environ.get("AI_API_KEY", os.environ.get("EMERGENT_LLM_KEY", ""))
 
 
 async def get_ai_response(messages: list, system_prompt: str) -> str:
@@ -14,16 +21,17 @@ async def get_ai_response(messages: list, system_prompt: str) -> str:
     Get AI response using configured provider.
     Returns the assistant's response text.
     """
+    provider = get_ai_provider()
     
-    if AI_PROVIDER == "emergent":
+    if provider == "emergent":
         return await _emergent_chat(messages, system_prompt)
-    elif AI_PROVIDER == "openai":
+    elif provider == "openai":
         return await _openai_chat(messages, system_prompt)
-    elif AI_PROVIDER == "anthropic":
+    elif provider == "anthropic":
         return await _anthropic_chat(messages, system_prompt)
-    elif AI_PROVIDER == "google":
+    elif provider == "google":
         return await _google_chat(messages, system_prompt)
-    elif AI_PROVIDER == "ollama":
+    elif provider == "ollama":
         return await _ollama_chat(messages, system_prompt)
     else:
         return await _emergent_chat(messages, system_prompt)
@@ -32,23 +40,30 @@ async def get_ai_response(messages: list, system_prompt: str) -> str:
 async def _emergent_chat(messages: list, system_prompt: str) -> str:
     """Use Emergent Universal Key (GPT-5.2)"""
     try:
-        from emergentintegrations.llm.chat import chat, UserMessage, SystemMessage, AssistantMessage
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
         
-        # Convert messages to Emergent format
-        emergent_messages = [SystemMessage(content=system_prompt)]
+        api_key = get_ai_api_key()
         
-        for msg in messages:
-            if msg["role"] == "user":
-                emergent_messages.append(UserMessage(content=msg["content"]))
-            elif msg["role"] == "assistant":
-                emergent_messages.append(AssistantMessage(content=msg["content"]))
+        # Create a unique session ID for this conversation
+        session_id = str(uuid.uuid4())
         
-        response = await chat(
-            api_key=AI_API_KEY,
-            messages=emergent_messages
+        # Initialize chat with system prompt
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=session_id,
+            system_message=system_prompt
         )
         
-        return response.message.content
+        # Use GPT-5.2 via Emergent
+        chat.with_model("openai", "gpt-5.2")
+        
+        # Replay all messages to build context, get response from the last user message
+        for msg in messages:
+            if msg["role"] == "user":
+                user_message = UserMessage(text=msg["content"])
+                response = await chat.send_message(user_message)
+        
+        return response
     except Exception as e:
         print(f"Emergent API error: {e}")
         raise
@@ -56,11 +71,12 @@ async def _emergent_chat(messages: list, system_prompt: str) -> str:
 
 async def _openai_chat(messages: list, system_prompt: str) -> str:
     """Use OpenAI directly"""
+    api_key = get_ai_api_key()
     async with httpx.AsyncClient() as client:
         response = await client.post(
             "https://api.openai.com/v1/chat/completions",
             headers={
-                "Authorization": f"Bearer {AI_API_KEY}",
+                "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json"
             },
             json={
@@ -77,6 +93,7 @@ async def _openai_chat(messages: list, system_prompt: str) -> str:
 
 async def _anthropic_chat(messages: list, system_prompt: str) -> str:
     """Use Anthropic Claude"""
+    api_key = get_ai_api_key()
     async with httpx.AsyncClient() as client:
         # Convert to Anthropic format
         anthropic_messages = []
@@ -89,7 +106,7 @@ async def _anthropic_chat(messages: list, system_prompt: str) -> str:
         response = await client.post(
             "https://api.anthropic.com/v1/messages",
             headers={
-                "x-api-key": AI_API_KEY,
+                "x-api-key": api_key,
                 "anthropic-version": "2023-06-01",
                 "Content-Type": "application/json"
             },
@@ -107,6 +124,7 @@ async def _anthropic_chat(messages: list, system_prompt: str) -> str:
 
 async def _google_chat(messages: list, system_prompt: str) -> str:
     """Use Google Gemini"""
+    api_key = get_ai_api_key()
     async with httpx.AsyncClient() as client:
         # Convert to Gemini format
         contents = []
@@ -121,7 +139,7 @@ async def _google_chat(messages: list, system_prompt: str) -> str:
             })
         
         response = await client.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={AI_API_KEY}",
+            f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={api_key}",
             headers={"Content-Type": "application/json"},
             json={
                 "contents": contents,
@@ -163,7 +181,9 @@ async def _ollama_chat(messages: list, system_prompt: str) -> str:
 
 def get_provider_info() -> dict:
     """Return info about current AI provider"""
+    provider = get_ai_provider()
+    api_key = get_ai_api_key()
     return {
-        "provider": AI_PROVIDER,
-        "configured": bool(AI_API_KEY) or AI_PROVIDER == "ollama"
+        "provider": provider,
+        "configured": bool(api_key) or provider == "ollama"
     }

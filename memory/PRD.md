@@ -21,11 +21,33 @@ Build a secure AI-powered whistleblower triage platform for Whistleblower UK (WB
 - **Frontend**: React with Shadcn/UI, Tailwind CSS
 - **Backend**: FastAPI (Python)
 - **Database**: MongoDB
-- **AI**: OpenAI GPT-5.2 via Emergent LLM Key
+- **AI**: Multi-provider support (Emergent/GPT-5.2, OpenAI, Anthropic, Google, Ollama)
 - **File Storage**: Local (production: MinIO/S3)
 - **Deployment**: Docker Compose with MongoDB, MinIO
 
 ## What's Been Implemented
+
+### March 2026 (Latest Session)
+- [x] **Multi-AI Provider Backend Refactoring COMPLETE**
+  - Created `ai_provider.py` adapter supporting:
+    - Emergent Universal Key (GPT-5.2)
+    - OpenAI direct (GPT-4 Turbo)
+    - Anthropic Claude
+    - Google Gemini
+    - Local Ollama (Llama 3.1)
+  - Runtime configuration via environment variables (AI_PROVIDER, AI_API_KEY)
+  - Updated `docker-compose.yml` for multi-provider support
+- [x] **Interactive Installation Wizard (`install-wizard.sh`)**
+  - Prompts for domain, SSL setup, admin credentials
+  - AI provider selection with API key input
+  - Site access password configuration
+  - Auto-generates secure MongoDB, MinIO, JWT secrets
+  - Creates admin user automatically
+  - Saves all credentials to CREDENTIALS.txt
+- [x] Updated `.env.template` with all configuration options
+- [x] Password gate protecting site (PasswordGate.jsx)
+- [x] AI prompt refinements for conversational tone
+- [x] Safeguarding protocols for vulnerable users
 
 ### December 2025
 - [x] UI Redesign to match WBUK branding (red accents #C41E3A)
@@ -90,7 +112,9 @@ Build a secure AI-powered whistleblower triage platform for Whistleblower UK (WB
 ### P1 (High)
 - [x] Evidence upload with metadata stripping
 - [x] Docker deployment setup
-- [ ] Migrate file storage to MinIO (S3-compatible) - IN PROGRESS
+- [x] Multi-AI provider support (Emergent, OpenAI, Anthropic, Google, Ollama)
+- [x] Interactive installation wizard
+- [ ] Migrate file storage to MinIO (S3-compatible) - NEXT PRIORITY
 - [ ] MFA for admin users
 - [ ] Email notifications for new cases
 
@@ -126,11 +150,14 @@ MONGO_PASSWORD=<generated>
 MINIO_USER=minioadmin
 MINIO_PASSWORD=<generated>
 JWT_SECRET=<generated>
-EMERGENT_LLM_KEY=<your-key>
+AI_PROVIDER=emergent|openai|anthropic|google|ollama
+AI_API_KEY=<your-api-key>
+EMERGENT_LLM_KEY=<your-emergent-key>
+SITE_PASSWORD=WBUK2026
 ```
 
 ## Next Tasks
-1. Test Docker deployment on fresh Ubuntu 24.04 VM
-2. Integrate MinIO for evidence storage (replace local uploads)
-3. Add SSL/HTTPS support (Let's Encrypt)
-4. Implement email notifications
+1. Integrate MinIO for evidence storage (replace local uploads)
+2. Test Docker deployment on fresh Ubuntu 24.04 VM
+3. Implement email notifications (SendGrid/Resend)
+4. Add MFA for admin users
